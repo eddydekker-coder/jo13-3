@@ -761,7 +761,7 @@ function confirmNewMatch(){
   const opp=document.getElementById('nmOpponent').value.trim();
   if(!opp){alert('Vul een tegenstander in.');return;}
   const useLast=document.getElementById('useLastLineup').checked;
-  if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+  if(displayInterval){clearInterval(displayInterval);displayInterval=null;}
   playtime={};
   match=EMPTY_MATCH();
   match.opponent=opp;
