@@ -305,6 +305,7 @@
   <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
     <div style="flex:1;font-size:.82rem;color:var(--muted)">Tik op een training om aanwezigheid in te voeren.</div>
     <button class="btn btn-blue" style="flex:none;padding:8px 12px;font-size:.78rem" onclick="showTab('speeltijd')">📊 Scores</button>
+    <button class="btn btn-green" style="flex:none;padding:8px 12px;font-size:.78rem" onclick="exportSeizoensrapport()">📊 Excel</button>
   </div>
   <div id="trainingList"></div>
 </div>
@@ -453,7 +454,7 @@
     </div>
     <div id="trainingAttendRows"></div>
     <div class="modal-actions" style="margin-top:12px">
-      <button class="btn btn-green" style="flex:1" onclick="closeModal('trainingModal')">Opslaan ✓</button>
+      <button class="btn btn-green" style="flex:1" onclick="saveTrainingSession()">Opslaan ✓</button>
     </div>
   </div>
 </div>
@@ -1236,8 +1237,102 @@ function exportExcel(){
     XLSX.utils.book_append_sheet(wb,ws3,'Seizoen totaal');
   }
 
+  appendTrainingSheets(wb);
+
   const fname=`JO13-3_${match.date||'wedstrijd'}_${(match.opponent||'rapport').replace(/\s+/g,'_')}.xlsx`;
   XLSX.writeFile(wb,fname);
+}
+
+// ── Trainings- en programmabladen (gedeeld door beide exports) ──
+function appendTrainingSheets(wb){
+  const LABEL={aanwezig:'✓',A:'A',B:'B',C:'C'};
+
+  // Alleen trainingen die daadwerkelijk geregistreerd zijn
+  const held=TRAINING_DATES.filter(t=>!t.holiday&&attendance[t.key]);
+
+  // Matrix: spelers × trainingsdata
+  const header=['Speler','Positie',...held.map(t=>formatTrainDate(t.date)),'Opkomst %'];
+  const {scores,counts}=getTrainingScores();
+  const rows=players.map(p=>{
+    const cells=held.map(t=>LABEL[attendance[t.key][p.id]||'aanwezig']);
+    const pct=counts[p.id]>0?Math.round(scores[p.id]/counts[p.id]):'';
+    return [p.naam,p.pos,...cells,pct];
+  }).sort((a,b)=>(b[b.length-1]||0)-(a[a.length-1]||0));
+
+  const wsT=XLSX.utils.aoa_to_sheet([
+    ['Trainingsaanwezigheid JO13-3 — bijgewerkt '+todayISO()],
+    ['✓ = aanwezig (100) · A = afgemeld/geblesseerd (75) · B = te laat (50) · C = absent zonder afmelding (0)'],
+    [],
+    header, ...rows,
+  ]);
+  wsT['!cols']=[{wch:28},{wch:14},...held.map(()=>({wch:9})),{wch:11}];
+  XLSX.utils.book_append_sheet(wb,wsT,'Training Aanwezigheid');
+
+  // Programma + uitslagen
+  const wsP=XLSX.utils.aoa_to_sheet([
+    ['Datum','Tijd','Thuis/Uit','Tegenstander','Wij','Zij','Resultaat'],
+    ...[...schedule].sort((a,b)=>a.date.localeCompare(b.date)).map(w=>{
+      const heeft=w.scoreHome!==null&&w.scoreHome!==undefined;
+      const res=heeft?(w.scoreHome>w.scoreAway?'Winst':w.scoreHome<w.scoreAway?'Verlies':'Gelijk'):'';
+      return [w.date,w.time||'',w.homeAway,w.opponent,heeft?w.scoreHome:'',heeft?w.scoreAway:'',res];
+    }),
+  ]);
+  wsP['!cols']=[{wch:12},{wch:8},{wch:11},{wch:26},{wch:6},{wch:6},{wch:11}];
+  XLSX.utils.book_append_sheet(wb,wsP,'Programma');
+}
+
+// Volledig seizoensrapport (los van een wedstrijd)
+function exportSeizoensrapport(){
+  if(typeof XLSX==='undefined'){alert('Excel-bibliotheek niet geladen. Open de app opnieuw met internetverbinding.');return;}
+  const wb=XLSX.utils.book_new();
+
+  // Spelers + contactgegevens
+  const wsS=XLSX.utils.aoa_to_sheet([
+    ['Nr.','Naam','Positie','Geboortedatum','Naam Ouder 1','Tel Ouder 1','Naam Ouder 2','Tel Ouder 2','Email Ouder','Opmerkingen'],
+    ...players.map(p=>[p.nr,p.naam,p.pos,p.dob||'',p.p1||'',p.p1t||'',p.p2||'',p.p2t||'',p.email||'',p.notes||'']),
+  ]);
+  wsS['!cols']=[{wch:6},{wch:28},{wch:15},{wch:15},{wch:22},{wch:16},{wch:22},{wch:16},{wch:26},{wch:28}];
+  XLSX.utils.book_append_sheet(wb,wsS,'Spelers');
+
+  // Seizoensstatistieken over alle gespeelde wedstrijden
+  const history=ls('jo133_history',[]);
+  const stats={};
+  players.forEach(p=>{stats[p.naam]={naam:p.naam,pos:p.pos,wed:0,min:0,goals:0,assists:0,captain:0};});
+  history.forEach(m=>{
+    Object.entries(m.playtime||{}).forEach(([id,secs])=>{
+      const pl=players.find(p=>p.id===+id);
+      if(pl&&stats[pl.naam]&&secs>0){ stats[pl.naam].min+=Math.floor(secs/60); stats[pl.naam].wed++; }
+    });
+    (m.events||[]).forEach(ev=>{
+      if(ev.type==='goal'&&ev.team==='thuis'){
+        if(stats[ev.scorer]) stats[ev.scorer].goals++;
+        if(ev.assist&&stats[ev.assist]) stats[ev.assist].assists++;
+      }
+    });
+    if(m.captain&&stats[m.captain]) stats[m.captain].captain++;
+  });
+  const wsSt=XLSX.utils.aoa_to_sheet([
+    ['Speler','Positie','Wedstrijden','Minuten','Doelpunten','Assists','Keer aanvoerder'],
+    ...Object.values(stats).sort((a,b)=>b.goals-a.goals||b.min-a.min)
+      .map(s=>[s.naam,s.pos,s.wed,s.min,s.goals,s.assists,s.captain]),
+  ]);
+  wsSt['!cols']=[{wch:28},{wch:15},{wch:13},{wch:10},{wch:12},{wch:9},{wch:15}];
+  XLSX.utils.book_append_sheet(wb,wsSt,'Seizoen totaal');
+
+  // Alle wedstrijdverslagen
+  const wsW=XLSX.utils.aoa_to_sheet([
+    ['Datum','Tegenstander','Thuis/Uit','Uitslag','Aanvoerder','Doelpuntenmakers'],
+    ...history.map(m=>{
+      const sc=(m.events||[]).filter(e=>e.type==='goal'&&e.team==='thuis')
+        .map(e=>`${e.minute}' ${e.scorer}${e.assist?' (a: '+e.assist+')':''}`).join(' · ');
+      return [m.date,m.opponent,m.homeAway,`${m.scoreHome}-${m.scoreAway}`,m.captain||'',sc];
+    }),
+  ]);
+  wsW['!cols']=[{wch:12},{wch:26},{wch:11},{wch:10},{wch:22},{wch:60}];
+  XLSX.utils.book_append_sheet(wb,wsW,'Wedstrijdverslagen');
+
+  appendTrainingSheets(wb);
+  XLSX.writeFile(wb,`JO13-3_Seizoensrapport_${todayISO()}.xlsx`);
 }
 
 // ══════════════════════════════════════════════════════
@@ -1583,9 +1678,12 @@ function renderTrainingList(){
   el.innerHTML=html;
 }
 
+let currentTrainingKey=null;
+
 function openTrainingModal(key){
   const t=TRAINING_DATES.find(t=>t.key===key);
   if(!t||t.holiday) return;
+  currentTrainingKey=key;
   document.getElementById('trainingModalTitle').textContent=`📅 ${formatTrainDate(t.date)}`;
   const sess=attendance[key]||{};
   const STATES=['aanwezig','A','B','C'];
@@ -1605,6 +1703,19 @@ function openTrainingModal(key){
   openModal('trainingModal');
 }
 
+// Legt de sessie definitief vast: iedereen zonder afwijkende status = aanwezig
+function saveTrainingSession(){
+  const key=currentTrainingKey;
+  if(key){
+    const sess=attendance[key]||{};
+    players.forEach(p=>{ if(!sess[p.id]) sess[p.id]='aanwezig'; });
+    attendance[key]=sess;
+    persistAttendance();
+  }
+  closeModal('trainingModal');
+  renderTrainingList();
+}
+
 function setAttend(key,pid,state,btn){
   if(!attendance[key]) attendance[key]={};
   attendance[key][pid]=state;
@@ -1618,22 +1729,24 @@ function setAttend(key,pid,state,btn){
   });
 }
 
+const POINTS={aanwezig:100,A:75,B:50,C:0};
+
 // Training scores per speler (voor speeltijd tab)
+// Elke geregistreerde training telt voor ALLE spelers mee; wie geen
+// afwijkende status heeft, geldt als aanwezig (100 punten).
 function getTrainingScores(){
   const scores={};
   const counts={};
   players.forEach(p=>{scores[p.id]=0;counts[p.id]=0;});
-  const POINTS={aanwezig:100,A:75,B:50,C:0};
   TRAINING_DATES.filter(t=>!t.holiday&&attendance[t.key]).forEach(t=>{
-    Object.entries(attendance[t.key]).forEach(([pid,state])=>{
-      const id=+pid;
-      if(scores[id]!==undefined){
-        scores[id]+=POINTS[state]||100;
-        counts[id]++;
-      }
+    const sess=attendance[t.key];
+    players.forEach(p=>{
+      const state=sess[p.id]||'aanwezig';
+      const pts=POINTS[state];
+      scores[p.id]+=(pts===undefined?100:pts);
+      counts[p.id]++;
     });
   });
-  // Ook aanwezig voor sessies zonder entry (impliciet aanwezig als session bestaat)
   return {scores,counts};
 }
 
