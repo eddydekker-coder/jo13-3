@@ -222,6 +222,7 @@
     <button class="btn btn-red" style="flex:none;padding:8px 12px" onclick="hardReset()">🗑 Herstel</button>
     <select id="formationSelect" onchange="applyFormation(false)"
       style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:#222;color:var(--text);font-size:.85rem">
+      <option value="ommen">1-4-3-3 · Ommen standaard</option>
       <option value="433">4-3-3</option>
       <option value="442">4-4-2</option>
       <option value="4231">4-2-3-1</option>
@@ -634,30 +635,61 @@ function getCurrentMinute(){
 // FORMATIONS
 // ══════════════════════════════════════════════════════
 
+// Slots met een `nr` worden gevuld met de speler die dat rugnummer draagt.
+// De standaard speelwijze van FC Ommen is 1-4-3-3 met een controlerende 6.
 const FORMATIONS = {
-  '433':  [{posX:50,posY:92},{posX:15,posY:70},{posX:37,posY:72},{posX:63,posY:72},{posX:85,posY:70},
+  'ommen': [
+    {nr:1,  posX:50, posY:92},                                             // keeper
+    {nr:5,  posX:12, posY:73},{nr:4, posX:37, posY:75},                    // linksback, centraal links
+    {nr:3,  posX:65, posY:75},{nr:2, posX:88, posY:73},                    // centraal rechts, rechtsback
+    {nr:6,  posX:50, posY:57},                                             // controleur
+    {nr:10, posX:34, posY:46},{nr:8, posX:68, posY:46},                    // middenvelders
+    {nr:11, posX:15, posY:28},{nr:9, posX:50, posY:24},{nr:7, posX:86, posY:28}, // buitenspelers + spits
+  ],
+  '433':  [{nr:1,posX:50,posY:92},{posX:15,posY:70},{posX:37,posY:72},{posX:63,posY:72},{posX:85,posY:70},
             {posX:20,posY:48},{posX:50,posY:44},{posX:80,posY:48},{posX:20,posY:22},{posX:50,posY:18},{posX:80,posY:22}],
-  '442':  [{posX:50,posY:92},{posX:15,posY:70},{posX:37,posY:72},{posX:63,posY:72},{posX:85,posY:70},
+  '442':  [{nr:1,posX:50,posY:92},{posX:15,posY:70},{posX:37,posY:72},{posX:63,posY:72},{posX:85,posY:70},
             {posX:20,posY:50},{posX:40,posY:52},{posX:60,posY:52},{posX:80,posY:50},{posX:35,posY:22},{posX:65,posY:22}],
-  '4231': [{posX:50,posY:92},{posX:15,posY:72},{posX:37,posY:74},{posX:63,posY:74},{posX:85,posY:72},
+  '4231': [{nr:1,posX:50,posY:92},{posX:15,posY:72},{posX:37,posY:74},{posX:63,posY:74},{posX:85,posY:72},
             {posX:33,posY:55},{posX:67,posY:55},{posX:20,posY:36},{posX:50,posY:32},{posX:80,posY:36},{posX:50,posY:14}],
-  '352':  [{posX:50,posY:92},{posX:28,posY:72},{posX:50,posY:74},{posX:72,posY:72},
+  '352':  [{nr:1,posX:50,posY:92},{posX:28,posY:72},{posX:50,posY:74},{posX:72,posY:72},
             {posX:10,posY:52},{posX:30,posY:50},{posX:50,posY:48},{posX:70,posY:50},{posX:90,posY:52},
             {posX:35,posY:20},{posX:65,posY:20}],
 };
 
+const STANDAARD_FORMATIE='ommen';
+
 if(lineup.length===0) applyFormation(true);
 
 function applyFormation(init){
-  const key=init?'433':document.getElementById('formationSelect').value;
-  const positions=FORMATIONS[key];
-  const sorted=[...players].sort((a,b)=>{
-    const o={Keeper:0,Verdediger:1,Middenvelder:2,Aanvaller:3};
-    return(o[a.pos]||2)-(o[b.pos]||2);
+  const sel=document.getElementById('formationSelect');
+  const key=init?STANDAARD_FORMATIE:(sel?sel.value:STANDAARD_FORMATIE);
+  if(init&&sel) sel.value=STANDAARD_FORMATIE;
+  const slots=FORMATIONS[key]||FORMATIONS[STANDAARD_FORMATIE];
+
+  const vrij=new Set(players.map(p=>p.id));
+  const nieuw=slots.map(s=>({playerId:null,posX:s.posX,posY:s.posY,nr:s.nr||null}));
+
+  // 1. Slots met een rugnummer krijgen de speler met dat nummer
+  nieuw.forEach(slot=>{
+    if(!slot.nr) return;
+    const p=players.find(p=>p.nr===slot.nr&&vrij.has(p.id));
+    if(p){ slot.playerId=p.id; vrij.delete(p.id); }
   });
-  lineup=positions.map((pos,i)=>({playerId:sorted[i]?sorted[i].id:null,posX:pos.posX,posY:pos.posY}));
-  const ids=new Set(lineup.map(l=>l.playerId).filter(Boolean));
-  bench=players.filter(p=>!ids.has(p.id)).map(p=>p.id);
+
+  // 2. Overgebleven slots vullen op volgorde van positie
+  const rest=players.filter(p=>vrij.has(p.id)).sort((a,b)=>{
+    const o={Keeper:0,Verdediger:1,Middenvelder:2,Aanvaller:3};
+    return (o[a.pos]??2)-(o[b.pos]??2) || a.nr-b.nr;
+  });
+  nieuw.forEach(slot=>{
+    if(slot.playerId) return;
+    const p=rest.shift();
+    if(p){ slot.playerId=p.id; vrij.delete(p.id); }
+  });
+
+  lineup=nieuw;
+  bench=players.filter(p=>vrij.has(p.id)).sort((a,b)=>a.nr-b.nr).map(p=>p.id);
   persist();
   renderPitch();
 }
@@ -866,7 +898,7 @@ function renderPitch(){
     div.style.left=slot.posX+'%';
     div.style.top=slot.posY+'%';
     const circle=document.createElement('div');
-    const isKeeper=idx===0;
+    const isKeeper=slot.nr===1||(slot.nr==null&&idx===0);
     const isCaptain=p&&match.captainId===p.id;
     circle.className='token-circle'+(isKeeper?' keeper':'');
     if(selectedPitchIdx===idx) circle.classList.add('selected');
