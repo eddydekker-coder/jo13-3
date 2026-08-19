@@ -519,6 +519,8 @@
       <button class="btn btn-blue" style="flex:1" onclick="saveWedstrijd()">Opslaan</button>
       <button class="btn btn-gray" style="flex:1" onclick="closeModal('addWedstrijdModal')">Annuleer</button>
     </div>
+    <button class="btn btn-red" id="wDeleteBtn" style="width:100%;margin-top:10px;display:none"
+      onclick="verwijderWedstrijd()">🗑 Wedstrijd verwijderen</button>
   </div>
 </div>
 
@@ -1658,36 +1660,62 @@ function importFromExcel(event){
       const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
       const ws=wb.Sheets['Spelers'];
       if(!ws){alert('Tabblad "Spelers" niet gevonden in het Excel-bestand.');return;}
-      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
-      if(!rows.length){alert('Geen spelersdata gevonden.');return;}
-
-      // Kolommen mappen (Excel headers → app velden)
-      // Nr., Naam, Positie, Geboortedatum, Naam Ouder 1, Tel Ouder 1, Naam Ouder 2, Tel Ouder 2, Email Ouder, Opmerkingen
-      const imported=rows.map((row,i)=>{
-        const bestaand=players.find(p=>p.naam===String(row['Naam']||'').trim())||{};
-        let dob='';
-        const dobRaw=row['Geboortedatum'];
-        if(dobRaw instanceof Date){
-          dob=isoLocal(dobRaw);
-        } else if(typeof dobRaw==='string'&&dobRaw.includes('-')){
-          dob=dobRaw;
+      // Positioneel inlezen zodat kolom D altijd het rugnummer is,
+      // ongeacht hoe de kop toevallig heet.
+      const grid=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',blankrows:false});
+      if(grid.length<2){alert('Geen spelersdata gevonden.');return;}
+      const kop=grid[0].map(h=>String(h||'').trim());
+      const idxVan=namen=>{
+        for(const n of namen){
+          const i=kop.findIndex(h=>h.toLowerCase()===n.toLowerCase());
+          if(i>=0) return i;
         }
+        return -1;
+      };
+      const COL={
+        naam : idxVan(['Naam'])>=0 ? idxVan(['Naam']) : 1,
+        pos  : idxVan(['Positie'])>=0 ? idxVan(['Positie']) : 2,
+        nr   : 3,   // kolom D = rugnummer (vaste positie, op verzoek)
+        dob  : idxVan(['Geboortedatum','Geboortedatum speler']),
+        p1   : idxVan(['Naam Ouder 1']),
+        p1t  : idxVan(['Tel Ouder 1','Telefoon Ouder 1']),
+        p2   : idxVan(['Naam Ouder 2']),
+        p2t  : idxVan(['Tel Ouder 2','Telefoon Ouder 2']),
+        email: idxVan(['Email Ouder','E-mail Ouder','Email']),
+        notes: idxVan(['Opmerkingen','Notities']),
+      };
+      const cel=(r,i)=>i>=0&&i<r.length?r[i]:'';
+      const tekst=(r,i)=>String(cel(r,i)||'').trim();
+
+      const imported=grid.slice(1).map((row,i)=>{
+        const naam=tekst(row,COL.naam);
+        if(!naam) return null;
+        const bestaand=players.find(p=>p.naam===naam)||{};
+        let dob='';
+        const dobRaw=cel(row,COL.dob);
+        if(dobRaw instanceof Date) dob=isoLocal(dobRaw);
+        else if(typeof dobRaw==='string'&&dobRaw.includes('-')) dob=dobRaw;
+        const nrRaw=cel(row,COL.nr);
+        const nr=Number(nrRaw);
         return{
           id: bestaand.id || Date.now()+i,
-          naam: String(row['Naam']||'').trim(),
-          nr:   +row['Nr.']||+row['Nr']||+row['Rugnummer']||(i+1),
-          pos:  String(row['Positie']||bestaand.pos||'Middenvelder').trim(),
+          naam,
+          nr: Number.isFinite(nr)&&nr>0 ? nr : (bestaand.nr||i+1),
+          pos: tekst(row,COL.pos)||bestaand.pos||'Middenvelder',
           dob,
-          p1:   String(row['Naam Ouder 1']||'').trim(),
-          p1t:  String(row['Tel Ouder 1']||'').trim(),
-          p2:   String(row['Naam Ouder 2']||'').trim(),
-          p2t:  String(row['Tel Ouder 2']||'').trim(),
-          email:String(row['Email Ouder']||'').trim(),
-          notes:String(row['Opmerkingen']||'').trim(),
+          p1:   tekst(row,COL.p1),
+          p1t:  tekst(row,COL.p1t),
+          p2:   tekst(row,COL.p2),
+          p2t:  tekst(row,COL.p2t),
+          email:tekst(row,COL.email),
+          notes:tekst(row,COL.notes),
         };
-      }).filter(p=>p.naam);
+      }).filter(Boolean);
 
-      if(!imported.length){alert('Geen geldige spelers gevonden. Controleer of het tabblad "Spelers" heet en de kolom "Naam" aanwezig is.');return;}
+      if(!imported.length){alert('Geen geldige spelers gevonden. Controleer of het tabblad "Spelers" heet en er een kolom "Naam" is.');return;}
+
+      // Sorteren op rugnummer
+      imported.sort((a,b)=>a.nr-b.nr);
 
       // Behoud huidige lineup/bench verwijzingen waar mogelijk
       players=imported;
@@ -1983,6 +2011,7 @@ function startFromSchedule(id){
 function openAddWedstrijd(){
   document.getElementById('wedstrijdModalTitle').textContent='🏆 Wedstrijd toevoegen';
   document.getElementById('editWedstrijdId').value='';
+  document.getElementById('wDeleteBtn').style.display='none';
   document.getElementById('wOpponent').value='';
   document.getElementById('wDate').value=todayISO();
   document.getElementById('wTime').value='10:00';
@@ -1997,6 +2026,7 @@ function openEditWedstrijd(id){
   if(!w) return;
   document.getElementById('wedstrijdModalTitle').textContent='🏆 Wedstrijd bewerken';
   document.getElementById('editWedstrijdId').value=id;
+  document.getElementById('wDeleteBtn').style.display='block';
   document.getElementById('wOpponent').value=w.opponent;
   document.getElementById('wDate').value=w.date;
   document.getElementById('wTime').value=w.time||'10:00';
@@ -2004,6 +2034,49 @@ function openEditWedstrijd(id){
   document.getElementById('wScoreHome').value=w.scoreHome??'';
   document.getElementById('wScoreAway').value=w.scoreAway??'';
   openModal('addWedstrijdModal');
+}
+
+// Verwijdert een wedstrijd uit het programma. Is hij al gespeeld, dan
+// vervallen ook de speelminuten, doelpunten en assists uit de statistieken.
+function verwijderWedstrijd(){
+  const id=document.getElementById('editWedstrijdId').value;
+  const i=schedule.findIndex(x=>x.id===id);
+  if(i<0) return;
+  const w=schedule[i];
+
+  const history=ls('jo133_history',[]);
+  const hIdx=history.findIndex(m=>m.opponent===w.opponent&&m.date===w.date);
+  const gespeeld=hIdx>=0;
+
+  let vraag=`Wedstrijd tegen ${w.opponent} op ${w.date} verwijderen uit het programma?`;
+  if(gespeeld){
+    const m=history[hIdx];
+    const minuten=Math.floor(Object.values(m.playtime||{}).reduce((a,b)=>a+b,0)/60);
+    const goals=(m.events||[]).filter(e=>e.type==='goal'&&e.team==='thuis').length;
+    vraag+=`\n\nLet op: deze wedstrijd is al gespeeld (${m.scoreHome}-${m.scoreAway}).\n`+
+           `Ook uit de statistieken verwijderd:\n`+
+           `• ${minuten} speelminuten verdeeld over de selectie\n`+
+           `• ${goals} doelpunt${goals===1?'':'en'} met bijbehorende assists`;
+  }
+  if(!confirm(vraag)) return;
+
+  schedule.splice(i,1);
+  persistSchedule();
+  if(gespeeld){
+    history.splice(hIdx,1);
+    ss('jo133_history',history);
+  }
+  // Staat deze wedstrijd nog open op het Wedstrijd-tabblad? Dan leegmaken.
+  if(match.opponent===w.opponent&&match.date===w.date){
+    if(displayInterval){clearInterval(displayInterval);displayInterval=null;}
+    match=EMPTY_MATCH();
+    playtime={};
+    persist();
+    updateScoreboard();renderTimerControls();updateTimerDisplay();renderEvents();
+  }
+  closeModal('addWedstrijdModal');
+  renderProgramma();
+  renderSpeeltijd();
 }
 
 function saveWedstrijd(){
