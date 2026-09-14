@@ -27,6 +27,60 @@
   .tab{flex:none;min-width:72px;padding:12px 6px;text-align:center;font-size:.72rem;cursor:pointer;
     color:var(--muted);border:none;background:none;transition:all .2s;white-space:nowrap}
   .tab.active{color:var(--text);border-bottom:3px solid var(--accent);font-weight:bold}
+  /* Sub-tabs binnen Wedstrijd */
+  .subtabs{display:flex;gap:8px;margin-bottom:12px;background:rgba(0,0,0,.25);
+    border-radius:10px;padding:4px}
+  .subtab{flex:1;padding:9px 6px;border:none;border-radius:7px;background:none;
+    color:var(--muted);font-size:.8rem;font-weight:bold;cursor:pointer;transition:all .15s}
+  .subtab.active{background:var(--blue);color:#fff}
+
+  /* Home dashboard */
+  .home-card{background:var(--card);border-radius:12px;padding:14px 16px;margin-bottom:10px;
+    border:1px solid var(--border)}
+  .hc-label{font-size:.68rem;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);
+    margin-bottom:6px}
+  .hc-main{font-size:1.15rem;font-weight:900;line-height:1.3}
+  .hc-sub{font-size:.78rem;color:var(--muted);margin-top:3px}
+  .hc-big{font-size:2rem;font-weight:900;letter-spacing:2px}
+  .hc-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .hc-pill{font-size:.7rem;padding:3px 9px;border-radius:11px;background:var(--border);
+    white-space:nowrap}
+  .hc-pill.win{background:var(--accent);color:#fff}
+  .hc-pill.loss{background:var(--red);color:#fff}
+  .hc-pill.draw{background:#666;color:#fff}
+  .hc-list{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+  .hc-item{display:flex;align-items:center;gap:9px;font-size:.8rem}
+  .hc-rank{width:19px;height:19px;border-radius:50%;background:var(--blue);color:#fff;
+    font-size:.65rem;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .hc-rank.gold{background:#D4AF37;color:#111}
+  .hc-item .hc-val{margin-left:auto;font-weight:bold;color:var(--accent)}
+
+  /* Afwezig */
+  .afw-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .afw-chip{display:flex;align-items:center;gap:5px;background:rgba(192,0,0,.18);
+    border:1px solid var(--red);border-radius:14px;padding:3px 9px;font-size:.74rem}
+  .afw-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+  .afw-row:last-child{border-bottom:none}
+  .afw-row .naam{flex:1;font-size:.85rem}
+  .afw-row.is-afwezig .naam{text-decoration:line-through;color:var(--muted)}
+  .afw-toggle{width:62px;padding:5px 0;border-radius:7px;border:1.5px solid var(--border);
+    background:var(--card);color:var(--muted);font-size:.72rem;font-weight:bold;cursor:pointer}
+  .afw-toggle.aan{background:var(--accent);border-color:var(--accent);color:#fff}
+  .afw-toggle.uit{background:var(--red);border-color:var(--red);color:#fff}
+
+  /* Statistiekentabel */
+  .stat-head,.stat-row{display:grid;grid-template-columns:1.7fr 34px 34px 40px 30px 30px;
+    gap:4px;align-items:center;padding:7px 8px;font-size:.76rem}
+  .stat-head{background:var(--blue);color:#fff;font-weight:bold;border-radius:8px 8px 0 0;
+    font-size:.66rem;text-transform:uppercase;letter-spacing:.4px}
+  .stat-row{background:var(--card);border-bottom:1px solid var(--border)}
+  .stat-row:nth-child(even){background:rgba(255,255,255,.03)}
+  .stat-row:last-child{border-radius:0 0 8px 8px;border-bottom:none}
+  .stat-row .nm{font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .stat-num{text-align:center}
+  .stat-num.groen{color:var(--accent);font-weight:bold}
+  .stat-num.rood{color:#ff6b6b}
+
   /* Training */
   .training-day{background:var(--card);border-radius:10px;padding:12px 14px;margin-bottom:8px;
     border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
@@ -205,75 +259,106 @@
 </header>
 
 <div class="tabs">
-  <button class="tab active" onclick="showTab('opstelling')">📋 Opstelling</button>
-  <button class="tab" onclick="showTab('wedstrijd')">🎯 Wedstrijd</button>
-  <button class="tab" onclick="showTab('spelers')">👥 Spelers</button>
-  <button class="tab" onclick="showTab('speeltijd')">⏱ Speeltijd</button>
-  <button class="tab" onclick="showTab('training')">📅 Training</button>
+  <button class="tab active" onclick="showTab('home')">🏠 Home</button>
   <button class="tab" onclick="showTab('programma')">🏆 Programma</button>
+  <button class="tab" onclick="showTab('wedstrijd')">⚽ Wedstrijd</button>
+  <button class="tab" onclick="showTab('spelers')">👥 Spelers</button>
+  <button class="tab" onclick="showTab('training')">📅 Training</button>
+  <button class="tab" onclick="showTab('statistieken')">📊 Statistieken</button>
 </div>
 
-<!-- ═══════════════ OPSTELLING ═══════════════ -->
-<div class="view active" id="view-opstelling">
-  <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-    <button class="btn btn-blue" style="flex:none;padding:8px 12px" onclick="openNewMatch()">+ Wedstrijd</button>
-    <button class="btn btn-yellow" style="flex:none;padding:8px 12px;color:#111" onclick="openCaptainModal()">🅒 Aanvoerder</button>
-    <button class="btn btn-gray" style="flex:none;padding:8px 12px" onclick="resetLineup()">↺ Reset</button>
-    <button class="btn btn-red" style="flex:none;padding:8px 12px" onclick="hardReset()">🗑 Herstel</button>
-    <select id="formationSelect" onchange="applyFormation(false)"
-      style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:#222;color:var(--text);font-size:.85rem">
-      <option value="ommen">1-4-3-3 · Ommen standaard</option>
-      <option value="433">4-3-3</option>
-      <option value="442">4-4-2</option>
-      <option value="4231">4-2-3-1</option>
-      <option value="352">3-5-2</option>
-    </select>
+<!-- ═══════════════ HOME ═══════════════ -->
+<div class="view active" id="view-home">
+  <div id="homeDashboard"></div>
+</div>
+
+<!-- ═══════════════ PROGRAMMA ═══════════════ -->
+<div class="view" id="view-programma">
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button class="btn btn-blue" style="flex:none;padding:8px 12px;font-size:.78rem" onclick="openAddWedstrijd()">+ Wedstrijd</button>
+    <a href="https://www.voetbal.nl/profiel/programma" target="_blank" rel="noopener"
+      style="flex:1;display:flex;align-items:center;justify-content:center;background:#444;border-radius:8px;color:var(--text);text-decoration:none;font-size:.78rem;font-weight:bold;padding:8px">
+      🌐 Voetbal.nl programma
+    </a>
   </div>
-  <div class="pitch-wrap">
-    <div class="pitch" id="pitch">
-      <div class="field-line" style="top:50%;left:0;right:0;height:1.5px"></div>
-      <div class="center-circle"></div>
-      <div class="penalty-box top"></div>
-      <div class="penalty-box bottom"></div>
-    </div>
-  </div>
-  <div class="bench-label">Wisselbank</div>
-  <div class="bench" id="bench"></div>
-  <p class="hint">Tik op een veldspeler om te selecteren, tik daarna op een andere veldspeler of bankspeler om te wisselen.</p>
+  <div id="programmaList"></div>
 </div>
 
 <!-- ═══════════════ WEDSTRIJD ═══════════════ -->
 <div class="view" id="view-wedstrijd">
-  <div class="scoreboard">
-    <div id="scoreDisplay" class="score-display">0 – 0</div>
-    <div class="score-teams">
-      <span>FC Ommen JO13-3</span>
-      <span id="oppName">Tegenstander</span>
+  <div class="subtabs">
+    <button class="subtab active" id="subtab-voorbereiding" onclick="showMatchSub('voorbereiding')">📋 Voorbereiding</button>
+    <button class="subtab" id="subtab-live" onclick="showMatchSub('live')">🎯 Live</button>
+  </div>
+
+  <!-- ── Voorbereiding ── -->
+  <div id="matchsub-voorbereiding">
+    <div id="prepMatchHeader"></div>
+
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn btn-yellow" style="flex:none;padding:8px 12px;color:#111" onclick="openCaptainModal()">🅒 Aanvoerder</button>
+      <button class="btn btn-gray" style="flex:none;padding:8px 12px" onclick="openAfwezigModal()">🚫 Afwezig</button>
+      <button class="btn btn-gray" style="flex:none;padding:8px 12px" onclick="resetLineup()">↺ Reset</button>
+      <select id="formationSelect" onchange="applyFormation(false)"
+        style="flex:1;min-width:150px;padding:8px;border-radius:8px;border:1px solid var(--border);background:#222;color:var(--text);font-size:.85rem">
+        <option value="ommen">1-4-3-3 · Ommen standaard</option>
+        <option value="433">4-3-3</option>
+        <option value="442">4-4-2</option>
+        <option value="4231">4-2-3-1</option>
+        <option value="352">3-5-2</option>
+      </select>
     </div>
+
+    <div class="pitch-wrap">
+      <div class="pitch" id="pitch">
+        <div class="field-line" style="top:50%;left:0;right:0;height:1.5px"></div>
+        <div class="center-circle"></div>
+        <div class="penalty-box top"></div>
+        <div class="penalty-box bottom"></div>
+      </div>
+    </div>
+
+    <div class="bench-label">Wisselbank</div>
+    <div class="bench" id="bench"></div>
+    <div id="afwezigStrip"></div>
+    <p class="hint">Tik op een veldspeler om te selecteren, tik daarna op een andere veldspeler of bankspeler om te wisselen.</p>
+
+    <div id="prepStartBlok"></div>
   </div>
 
-  <div class="timer-block">
-    <div class="timer-half-label" id="halfLabel">—</div>
-    <div class="timer-display" id="timerDisplay">00:00</div>
-    <div class="timer-sub" id="timerSub">Wedstrijd niet gestart</div>
-  </div>
+  <!-- ── Live ── -->
+  <div id="matchsub-live" style="display:none">
+    <div class="scoreboard">
+      <div id="scoreDisplay" class="score-display">0 – 0</div>
+      <div class="score-teams">
+        <span>FC Ommen JO13-3</span>
+        <span id="oppName">Tegenstander</span>
+      </div>
+    </div>
 
-  <div id="timerControls"></div>
+    <div class="timer-block">
+      <div class="timer-half-label" id="halfLabel">—</div>
+      <div class="timer-display" id="timerDisplay">00:00</div>
+      <div class="timer-sub" id="timerSub">Wedstrijd niet gestart</div>
+    </div>
 
-  <div class="match-controls">
-    <button class="btn btn-green" onclick="logGoal('thuis')">⚽ Doelpunt</button>
-    <button class="btn btn-red" onclick="logGoal('tegen')">💀 Tegendoelpunt</button>
-    <button class="btn btn-yellow" onclick="openSubModal()">🔄 Wissel</button>
-  </div>
+    <div id="timerControls"></div>
 
-  <div class="match-controls">
-    <button class="btn btn-gray" style="font-size:.75rem" onclick="resetHuidigeWedstrijd()">🧪 Wedstrijd resetten</button>
-    <button class="btn btn-gray" style="font-size:.75rem" onclick="openBeheerModal()">🗂 Beheer data</button>
-  </div>
+    <div class="match-controls">
+      <button class="btn btn-green" onclick="logGoal('thuis')">⚽ Doelpunt</button>
+      <button class="btn btn-red" onclick="logGoal('tegen')">💀 Tegendoelpunt</button>
+      <button class="btn btn-yellow" onclick="openSubModal()">🔄 Wissel</button>
+    </div>
 
-  <div class="section-title">Wedstrijdverloop</div>
-  <div class="events-list" id="eventsList">
-    <div style="color:var(--muted);font-size:.8rem;padding:10px">Nog geen events geregistreerd.</div>
+    <div class="match-controls">
+      <button class="btn btn-gray" style="font-size:.75rem" onclick="resetHuidigeWedstrijd()">🧪 Wedstrijd resetten</button>
+      <button class="btn btn-gray" style="font-size:.75rem" onclick="openBeheerModal()">🗂 Beheer data</button>
+    </div>
+
+    <div class="section-title">Wedstrijdverloop</div>
+    <div class="events-list" id="eventsList">
+      <div style="color:var(--muted);font-size:.8rem;padding:10px">Nog geen events geregistreerd.</div>
+    </div>
   </div>
 </div>
 
@@ -290,42 +375,33 @@
     <button class="btn btn-gray" style="font-size:.75rem;padding:7px" onclick="downloadBackup()">💾 Back-up</button>
     <button class="btn btn-gray" style="font-size:.75rem;padding:7px" onclick="document.getElementById('backupRestore').click()">♻️ Terugzetten</button>
     <input type="file" id="backupRestore" accept=".json" style="display:none" onchange="restoreBackup(event)">
+    <button class="btn btn-red" style="font-size:.75rem;padding:7px" onclick="hardReset()">🗑 Herstel</button>
   </div>
   <div id="importStatus" style="display:none;background:rgba(0,168,107,.15);border:1px solid var(--accent);border-radius:8px;padding:10px;font-size:.82rem;margin-bottom:10px"></div>
   <div id="playerList"></div>
   <button class="fab" onclick="openAddPlayer()">+</button>
 </div>
 
-<!-- ═══════════════ SPEELTIJD ═══════════════ -->
-<div class="view" id="view-speeltijd">
-  <div class="section-title">Deze wedstrijd</div>
-  <div id="speeltijdList"></div>
-  <div class="section-title" style="margin-top:20px">Seizoen totaal</div>
-  <div id="seizoenList"></div>
-  <div class="section-title" style="margin-top:20px">Trainingsopkomst</div>
-  <div id="trainingScoreList" style="padding-bottom:20px"></div>
-</div>
-
 <!-- ═══════════════ TRAINING ═══════════════ -->
 <div class="view" id="view-training">
   <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
     <div style="flex:1;font-size:.82rem;color:var(--muted)">Tik op een training om aanwezigheid in te voeren.</div>
-    <button class="btn btn-blue" style="flex:none;padding:8px 12px;font-size:.78rem" onclick="showTab('speeltijd')">📊 Scores</button>
+    <button class="btn btn-blue" style="flex:none;padding:8px 12px;font-size:.78rem" onclick="showTab('statistieken')">📊 Scores</button>
     <button class="btn btn-green" style="flex:none;padding:8px 12px;font-size:.78rem" onclick="exportSeizoensrapport()">📊 Excel</button>
   </div>
   <div id="trainingList"></div>
 </div>
 
-<!-- ═══════════════ PROGRAMMA ═══════════════ -->
-<div class="view" id="view-programma">
-  <div style="display:flex;gap:8px;margin-bottom:12px">
-    <button class="btn btn-blue" style="flex:none;padding:8px 12px;font-size:.78rem" onclick="openAddWedstrijd()">+ Wedstrijd</button>
-    <a href="https://www.voetbal.nl/profiel/programma" target="_blank" rel="noopener"
-      style="flex:1;display:flex;align-items:center;justify-content:center;background:#444;border-radius:8px;color:var(--text);text-decoration:none;font-size:.78rem;font-weight:bold;padding:8px">
-      🌐 Voetbal.nl programma
-    </a>
-  </div>
-  <div id="programmaList"></div>
+<!-- ═══════════════ STATISTIEKEN ═══════════════ -->
+<div class="view" id="view-statistieken">
+  <div class="section-title" style="margin-top:0">Seizoensoverzicht per speler</div>
+  <div id="statsTabel"></div>
+  <div class="section-title" style="margin-top:20px">Speelminuten deze wedstrijd</div>
+  <div id="speeltijdList"></div>
+  <div class="section-title" style="margin-top:20px">Speelminuten seizoen</div>
+  <div id="seizoenList"></div>
+  <div class="section-title" style="margin-top:20px">Trainingsopkomst</div>
+  <div id="trainingScoreList" style="padding-bottom:20px"></div>
 </div>
 
 <!-- ══ MODALS ══ -->
@@ -440,6 +516,22 @@
       <button class="btn btn-red" id="resetConfirmBtn" style="flex:1;opacity:.4" disabled
         onclick="performHardReset()">Definitief wissen</button>
       <button class="btn btn-gray" style="flex:1" onclick="closeModal('resetModal')">Annuleer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Afwezigheid -->
+<div class="modal-bg" id="afwezigModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('afwezigModal')">✕</button>
+    <h3 id="afwezigTitel">🚫 Afwezig melden</h3>
+    <p style="font-size:.78rem;color:var(--muted);margin-bottom:12px">
+      Afwezige spelers worden niet voorgesteld bij wissels en tellen mee als
+      gemist in de statistieken.
+    </p>
+    <div id="afwezigRijen"></div>
+    <div class="modal-actions">
+      <button class="btn btn-green" style="flex:1" onclick="sluitAfwezigModal()">Klaar</button>
     </div>
   </div>
 </div>
@@ -584,6 +676,7 @@ const EMPTY_MATCH = () => ({
   halfElapsed:[0,0],
   lastSnapshotTime:null,
   captainId:null,
+  absent:[],
 });
 
 function ls(key,def){try{const v=localStorage.getItem(key);return v?JSON.parse(v):def}catch{return def}}
@@ -692,6 +785,279 @@ function applyFormation(init){
   bench=players.filter(p=>vrij.has(p.id)).sort((a,b)=>a.nr-b.nr).map(p=>p.id);
   persist();
   renderPitch();
+}
+
+// ══════════════════════════════════════════════════════
+// WEDSTRIJD — VOORBEREIDING & AFWEZIGHEID
+// ══════════════════════════════════════════════════════
+
+let matchSub='voorbereiding';
+
+function showMatchSub(which){
+  matchSub=which;
+  document.getElementById('subtab-voorbereiding').classList.toggle('active',which==='voorbereiding');
+  document.getElementById('subtab-live').classList.toggle('active',which==='live');
+  document.getElementById('matchsub-voorbereiding').style.display=which==='voorbereiding'?'block':'none';
+  document.getElementById('matchsub-live').style.display=which==='live'?'block':'none';
+  if(which==='voorbereiding') renderVoorbereiding();
+  else { updateScoreboard();renderTimerControls();updateTimerDisplay();renderEvents(); }
+}
+
+function renderVoorbereiding(){
+  const hdr=document.getElementById('prepMatchHeader');
+  const blok=document.getElementById('prepStartBlok');
+  const gestart=match.currentHalf>0;
+
+  if(!match.opponent){
+    hdr.innerHTML=`<div class="home-card" style="border-color:var(--light-blue)">
+      <div class="hc-label">Geen wedstrijd gekozen</div>
+      <div class="hc-sub">Kies een wedstrijd in het Programma of maak er hier een aan.</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-blue" onclick="showTab('programma')">🏆 Naar programma</button>
+        <button class="btn btn-gray" onclick="openNewMatch()">+ Losse wedstrijd</button>
+      </div>
+    </div>`;
+  } else {
+    const d=match.date?new Date(match.date+'T00:00:00'):null;
+    const cap=players.find(p=>p.id===match.captainId);
+    hdr.innerHTML=`<div class="home-card">
+      <div class="hc-label">${gestart?'Wedstrijd bezig':'Voorbereiding'}</div>
+      <div class="hc-main">${match.homeAway==='Thuis'?'🏠':'✈️'} ${match.opponent}</div>
+      <div class="hc-sub">${d?formatLangeDatum(d):''}${cap?' · 🅒 '+cap.naam:''}</div>
+    </div>`;
+  }
+
+  // Afwezigen-strip
+  const strip=document.getElementById('afwezigStrip');
+  const afw=(match.absent||[]).map(id=>players.find(p=>p.id===id)).filter(Boolean);
+  strip.innerHTML=afw.length
+    ? `<div class="bench-label" style="margin-top:12px">Afwezig (${afw.length})</div>
+       <div class="afw-strip">${afw.map(p=>
+         `<span class="afw-chip">${p.nr}. ${shortName(p.naam)}
+            <span style="cursor:pointer" onclick="zetAfwezig(${p.id},false)">✕</span></span>`).join('')}</div>`
+    : '';
+
+  // Startknop
+  if(!match.opponent){ blok.innerHTML=''; return; }
+  const inVeld=lineup.filter(s=>s.playerId).length;
+  const beschikbaar=players.length-(match.absent||[]).length;
+  if(gestart){
+    blok.innerHTML=`<button class="btn btn-blue" style="width:100%;margin-top:14px;padding:14px"
+      onclick="showMatchSub('live')">🎯 Naar live wedstrijd →</button>`;
+  } else {
+    blok.innerHTML=`
+      <div style="font-size:.76rem;color:var(--muted);text-align:center;margin-top:14px">
+        ${inVeld} in het veld · ${Math.max(0,beschikbaar-inVeld)} op de bank · ${(match.absent||[]).length} afwezig
+      </div>
+      <button class="btn btn-green" style="width:100%;margin-top:8px;padding:14px;font-size:.95rem"
+        onclick="startVanuitVoorbereiding()">▶ Wedstrijd starten</button>`;
+  }
+}
+
+function startVanuitVoorbereiding(){
+  if(!match.opponent){alert('Kies eerst een wedstrijd.');return;}
+  showMatchSub('live');
+  startHalf(1);
+}
+
+// ── Afwezigheid ──
+let afwezigContext={type:'huidig',histIndex:null};
+
+function openAfwezigModal(){
+  afwezigContext={type:'huidig',histIndex:null};
+  document.getElementById('afwezigTitel').textContent=
+    '🚫 Afwezig — '+(match.opponent||'huidige wedstrijd');
+  renderAfwezigRijen((match.absent||[]));
+  openModal('afwezigModal');
+}
+
+// Retroactief: afwezigheid van een al gespeelde wedstrijd aanpassen
+function openAfwezigHistorie(idx){
+  const history=ls('jo133_history',[]);
+  const m=history[idx];
+  if(!m) return;
+  afwezigContext={type:'historie',histIndex:idx};
+  document.getElementById('afwezigTitel').textContent='🚫 Afwezig — '+m.opponent;
+  renderAfwezigRijen(m.absent||[]);
+  openModal('afwezigModal');
+}
+
+function renderAfwezigRijen(absentIds){
+  const el=document.getElementById('afwezigRijen');
+  el.innerHTML=[...players].sort((a,b)=>a.nr-b.nr).map(p=>{
+    const weg=absentIds.includes(p.id);
+    return`<div class="afw-row ${weg?'is-afwezig':''}" id="afwrow-${p.id}">
+      <span class="naam">${p.nr}. ${p.naam}</span>
+      <button class="afw-toggle ${weg?'uit':'aan'}" onclick="zetAfwezig(${p.id},${!weg})">
+        ${weg?'Afwezig':'Aanwezig'}</button>
+    </div>`;
+  }).join('');
+}
+
+function zetAfwezig(pid,afwezig){
+  if(afwezigContext.type==='historie'){
+    const history=ls('jo133_history',[]);
+    const m=history[afwezigContext.histIndex];
+    if(!m) return;
+    m.absent=m.absent||[];
+    m.absent=afwezig?[...new Set([...m.absent,pid])]:m.absent.filter(x=>x!==pid);
+    ss('jo133_history',history);
+    renderAfwezigRijen(m.absent);
+    renderProgramma();
+    renderSpeeltijd();
+    return;
+  }
+
+  match.absent=match.absent||[];
+  if(afwezig){
+    match.absent=[...new Set([...match.absent,pid])];
+    // Staat hij in de basis? Vervang door een beschikbare bankspeler.
+    const slot=lineup.find(s=>s.playerId===pid);
+    if(slot){
+      const vervanger=bench.find(id=>!match.absent.includes(id));
+      slot.playerId=vervanger||null;
+      if(vervanger) bench=bench.filter(id=>id!==vervanger);
+      if(!bench.includes(pid)) bench.push(pid);
+    }
+    if(match.captainId===pid) match.captainId=null;
+  } else {
+    match.absent=match.absent.filter(x=>x!==pid);
+  }
+  persist();
+  if(document.getElementById('afwezigModal').classList.contains('open'))
+    renderAfwezigRijen(match.absent);
+  renderPitch();
+  renderVoorbereiding();
+}
+
+function sluitAfwezigModal(){
+  closeModal('afwezigModal');
+  if(afwezigContext.type==='huidig'){ renderPitch(); renderVoorbereiding(); }
+}
+
+// ══════════════════════════════════════════════════════
+// HOME DASHBOARD
+// ══════════════════════════════════════════════════════
+
+const LANGE_DAGEN=['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+const LANGE_MAANDEN=['januari','februari','maart','april','mei','juni','juli',
+                      'augustus','september','oktober','november','december'];
+
+function formatLangeDatum(d){
+  return `${LANGE_DAGEN[d.getDay()]} ${d.getDate()} ${LANGE_MAANDEN[d.getMonth()]}`;
+}
+
+// Wasrotatie: alfabetisch op naam, één gezin per wedstrijd — gelijk aan de Excel.
+function wasserVoor(index){
+  if(!players.length) return null;
+  const alfabet=[...players].sort((a,b)=>a.naam.localeCompare(b.naam,'nl'));
+  return alfabet[index%alfabet.length];
+}
+
+function renderHome(){
+  const el=document.getElementById('homeDashboard');
+  const history=ls('jo133_history',[]);
+  const gesorteerd=[...schedule].sort((a,b)=>a.date.localeCompare(b.date));
+  const vandaag=todayISO();
+  let html='';
+
+  // ── Laatste wedstrijd ──
+  const laatste=history.length?history[history.length-1]:null;
+  if(laatste){
+    const h=laatste.scoreHome,a=laatste.scoreAway;
+    const uitslag=h>a?'Winst':h<a?'Verlies':'Gelijkspel';
+    const cls=h>a?'win':h<a?'loss':'draw';
+    const scorers=(laatste.events||[]).filter(e=>e.type==='goal'&&e.team==='thuis')
+      .map(e=>shortName(e.scorer)).join(', ');
+    html+=`<div class="home-card">
+      <div class="hc-label">Laatste wedstrijd</div>
+      <div class="hc-row">
+        <div>
+          <div class="hc-big">${h} – ${a}</div>
+          <div class="hc-sub">${laatste.homeAway==='Thuis'?'🏠':'✈️'} ${laatste.opponent}</div>
+        </div>
+        <span class="hc-pill ${cls}">${uitslag}</span>
+      </div>
+      ${scorers?`<div class="hc-sub" style="margin-top:8px">⚽ ${scorers}</div>`:''}
+    </div>`;
+  } else {
+    html+=`<div class="home-card">
+      <div class="hc-label">Laatste wedstrijd</div>
+      <div class="hc-sub">Nog geen wedstrijd gespeeld dit seizoen.</div>
+    </div>`;
+  }
+
+  // ── Eerstvolgende wedstrijd ──
+  const volgende=gesorteerd.find(w=>w.date>=vandaag&&(w.scoreHome===null||w.scoreHome===undefined));
+  if(volgende){
+    const d=new Date(volgende.date+'T00:00:00');
+    const dagen=Math.round((d-new Date(vandaag+'T00:00:00'))/86400000);
+    const wanneer=dagen===0?'vandaag':dagen===1?'morgen':`over ${dagen} dagen`;
+    html+=`<div class="home-card">
+      <div class="hc-label">Eerstvolgende wedstrijd</div>
+      <div class="hc-row">
+        <div>
+          <div class="hc-main">${volgende.homeAway==='Thuis'?'🏠':'✈️'} ${volgende.opponent}</div>
+          <div class="hc-sub">${formatLangeDatum(d)} · ${volgende.time||''}</div>
+        </div>
+        <span class="hc-pill">${wanneer}</span>
+      </div>
+      <button class="btn btn-green" style="width:100%;margin-top:10px"
+        onclick="startFromSchedule('${volgende.id}')">📋 Voorbereiden</button>
+    </div>`;
+  } else {
+    html+=`<div class="home-card">
+      <div class="hc-label">Eerstvolgende wedstrijd</div>
+      <div class="hc-sub">Geen geplande wedstrijden. Vul het programma aan.</div>
+    </div>`;
+  }
+
+  // ── Shirts ──
+  const gespeeldIdx=gesorteerd.map((w,i)=>({w,i}))
+    .filter(({w})=>w.scoreHome!==null&&w.scoreHome!==undefined);
+  const heeftNu=gespeeldIdx.length?wasserVoor(gespeeldIdx[gespeeldIdx.length-1].i):null;
+  const volgendeIdx=volgende?gesorteerd.findIndex(w=>w.id===volgende.id):-1;
+  const wastStraks=volgendeIdx>=0?wasserVoor(volgendeIdx):null;
+  html+=`<div class="home-card">
+    <div class="hc-label">Shirts</div>
+    ${heeftNu
+      ? `<div class="hc-main">👕 ${heeftNu.naam}</div><div class="hc-sub">heeft de shirts nu in huis</div>`
+      : `<div class="hc-sub">Nog niemand heeft de shirts meegenomen.</div>`}
+    ${wastStraks
+      ? `<div class="hc-sub" style="margin-top:8px">🧺 Wast na de volgende wedstrijd: <b style="color:var(--text)">${wastStraks.naam}</b></div>`
+      : ''}
+  </div>`;
+
+  // ── Top 5 trainingsopkomst ──
+  const {scores,counts}=getTrainingScores();
+  const top5t=players.map(p=>({p,pct:counts[p.id]>0?Math.round(scores[p.id]/counts[p.id]):null,n:counts[p.id]}))
+    .filter(x=>x.pct!==null).sort((a,b)=>b.pct-a.pct).slice(0,5);
+  html+=`<div class="home-card">
+    <div class="hc-label">Top 5 trainingsopkomst</div>
+    ${top5t.length?`<div class="hc-list">${top5t.map((x,i)=>
+      `<div class="hc-item"><span class="hc-rank ${i===0?'gold':''}">${i+1}</span>
+        <span>${shortName(x.p.naam)}</span>
+        <span class="hc-val">${x.pct}%</span></div>`).join('')}</div>`
+      :`<div class="hc-sub">Nog geen trainingen geregistreerd.</div>`}
+  </div>`;
+
+  // ── Top 5 speelminuten ──
+  const seizoenMin={};
+  history.forEach(m=>Object.entries(m.playtime||{}).forEach(([id,secs])=>{
+    seizoenMin[+id]=(seizoenMin[+id]||0)+Math.floor(secs/60);
+  }));
+  const top5m=players.map(p=>({p,min:seizoenMin[p.id]||0}))
+    .filter(x=>x.min>0).sort((a,b)=>b.min-a.min).slice(0,5);
+  html+=`<div class="home-card">
+    <div class="hc-label">Top 5 speelminuten</div>
+    ${top5m.length?`<div class="hc-list">${top5m.map((x,i)=>
+      `<div class="hc-item"><span class="hc-rank ${i===0?'gold':''}">${i+1}</span>
+        <span>${shortName(x.p.naam)}</span>
+        <span class="hc-val">${x.min}'</span></div>`).join('')}</div>`
+      :`<div class="hc-sub">Nog geen speelminuten geregistreerd.</div>`}
+  </div>`;
+
+  el.innerHTML=html;
 }
 
 // ══════════════════════════════════════════════════════
@@ -924,10 +1290,16 @@ function renderPitch(){
   renderBench();
 }
 
+function isAfwezig(pid){ return (match.absent||[]).includes(pid); }
+
 function renderBench(){
   const el=document.getElementById('bench');
   el.innerHTML='';
-  bench.forEach(pid=>{
+  const zichtbaar=bench.filter(pid=>!isAfwezig(pid));
+  if(!zichtbaar.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:.78rem;padding:6px">Geen wisselspelers beschikbaar.</div>';
+  }
+  zichtbaar.forEach(pid=>{
     const p=players.find(pl=>pl.id===pid);
     if(!p) return;
     const div=document.createElement('div');
@@ -1081,6 +1453,7 @@ function confirmEinde(){
     events:JSON.parse(JSON.stringify(match.events)),
     playtime:JSON.parse(JSON.stringify(playtime)),
     captain:captainPlayer?captainPlayer.naam:null,
+    absent:[...(match.absent||[])],
   });
   ss('jo133_history',history);
   // Uitslag terugschrijven naar programma
@@ -1276,7 +1649,7 @@ function openSubModal(){
     const p=players.find(pl=>pl.id===slot.playerId);
     if(p) sOut.innerHTML+=`<option value="${p.id}">${p.nr}. ${p.naam}</option>`;
   });
-  bench.forEach(pid=>{
+  bench.filter(pid=>!isAfwezig(pid)).forEach(pid=>{
     const p=players.find(pl=>pl.id===pid);
     if(p) sIn.innerHTML+=`<option value="${p.id}">${p.nr}. ${p.naam}</option>`;
   });
@@ -1584,7 +1957,63 @@ function savePlayer(){
 // SPEELTIJD
 // ══════════════════════════════════════════════════════
 
+// Seizoensstatistiek per speler: aanwezig/gemist, minuten, doelpunten, assists
+function getSeizoenStats(){
+  const history=ls('jo133_history',[]);
+  const st={};
+  players.forEach(p=>{st[p.id]={p,aanwezig:0,gemist:0,minuten:0,goals:0,assists:0};});
+  history.forEach(m=>{
+    const absent=m.absent||[];
+    players.forEach(p=>{
+      if(!st[p.id]) return;
+      if(absent.includes(p.id)) st[p.id].gemist++;
+      else st[p.id].aanwezig++;
+    });
+    Object.entries(m.playtime||{}).forEach(([id,secs])=>{
+      if(st[+id]) st[+id].minuten+=Math.floor(secs/60);
+    });
+    (m.events||[]).forEach(ev=>{
+      if(ev.type!=='goal'||ev.team!=='thuis') return;
+      const sc=players.find(p=>p.naam===ev.scorer);
+      if(sc&&st[sc.id]) st[sc.id].goals++;
+      if(ev.assist){
+        const as=players.find(p=>p.naam===ev.assist);
+        if(as&&st[as.id]) st[as.id].assists++;
+      }
+    });
+  });
+  return {stats:Object.values(st),gespeeld:history.length};
+}
+
+function renderStatsTabel(){
+  const el=document.getElementById('statsTabel');
+  if(!el) return;
+  const {stats,gespeeld}=getSeizoenStats();
+  if(!gespeeld){
+    el.innerHTML='<div style="color:var(--muted);font-size:.8rem;padding:10px">Nog geen wedstrijden gespeeld.</div>';
+    return;
+  }
+  const rijen=[...stats].sort((a,b)=>b.goals-a.goals||b.minuten-a.minuten||a.p.nr-b.p.nr);
+  el.innerHTML=
+    `<div class="stat-head">
+       <span>Speler</span><span class="stat-num">Wed</span><span class="stat-num">Mist</span>
+       <span class="stat-num">Min</span><span class="stat-num">⚽</span><span class="stat-num">🅰</span>
+     </div>`+
+    rijen.map(r=>`<div class="stat-row">
+       <span class="nm">${r.p.nr}. ${shortName(r.p.naam)}</span>
+       <span class="stat-num groen">${r.aanwezig}</span>
+       <span class="stat-num ${r.gemist>0?'rood':''}">${r.gemist}</span>
+       <span class="stat-num">${r.minuten}</span>
+       <span class="stat-num ${r.goals>0?'groen':''}">${r.goals}</span>
+       <span class="stat-num">${r.assists}</span>
+     </div>`).join('')+
+    `<div style="font-size:.7rem;color:var(--muted);padding:8px 2px">
+       ${gespeeld} wedstrijd${gespeeld===1?'':'en'} gespeeld · Wed = erbij, Mist = afgemeld/afwezig
+     </div>`;
+}
+
 function renderSpeeltijd(){
+  renderStatsTabel();
   // Deze wedstrijd
   const el=document.getElementById('speeltijdList');
   const maxMin=Math.max(...players.map(p=>playtime[p.id]||0),1);
@@ -1647,15 +2076,19 @@ function renderSpeeltijd(){
 // ══════════════════════════════════════════════════════
 
 function showTab(name){
-  const TABS=['opstelling','wedstrijd','spelers','speeltijd','training','programma'];
+  const TABS=['home','programma','wedstrijd','spelers','training','statistieken'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',TABS[i]===name));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
+  if(name==='home') renderHome();
   if(name==='spelers') renderPlayerList();
-  if(name==='speeltijd') renderSpeeltijd();
+  if(name==='statistieken') renderSpeeltijd();
   if(name==='training') renderTrainingList();
   if(name==='programma') renderProgramma();
-  if(name==='wedstrijd'){updateScoreboard();renderTimerControls();updateTimerDisplay();renderEvents();}
+  if(name==='wedstrijd'){
+    showMatchSub(match.currentHalf>0?'live':'voorbereiding');
+    updateScoreboard();renderTimerControls();updateTimerDisplay();renderEvents();renderPitch();
+  }
 }
 
 function openModal(id){document.getElementById(id).classList.add('open')}
@@ -2010,7 +2443,8 @@ function renderProgramma(){
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
           ${scoreHtml}
           <div style="display:flex;gap:6px">
-            ${!isPast&&!hasResult?`<button class="pc-edit" style="border-color:var(--accent);color:var(--accent)" onclick="startFromSchedule('${w.id}')">▶ Start</button>`:''}
+            ${!isPast&&!hasResult?`<button class="pc-edit" style="border-color:var(--accent);color:var(--accent)" onclick="startFromSchedule('${w.id}')">📋 Prep</button>`:''}
+            ${hasResult?`<button class="pc-edit" title="Afwezigen aanpassen" onclick="afwezigVanProgramma('${w.id}')">🚫</button>`:''}
             <button class="pc-edit" onclick="openEditWedstrijd('${w.id}')">✏</button>
           </div>
         </div>
@@ -2019,11 +2453,21 @@ function renderProgramma(){
   }).join('');
 }
 
+// Retroactief afwezigen aanpassen vanuit het programma
+function afwezigVanProgramma(id){
+  const w=schedule.find(x=>x.id===id);
+  if(!w) return;
+  const history=ls('jo133_history',[]);
+  const idx=history.findIndex(m=>m.opponent===w.opponent&&m.date===w.date);
+  if(idx<0){ alert('Deze wedstrijd staat niet in de geschiedenis.'); return; }
+  openAfwezigHistorie(idx);
+}
+
 // Start een wedstrijd rechtstreeks vanuit het programma
 function startFromSchedule(id){
   const w=schedule.find(x=>x.id===id);
   if(!w) return;
-  if(!confirm(`Wedstrijd starten tegen ${w.opponent}?\n\nDe huidige wedstrijddata wordt gewist.`)) return;
+  if(!confirm(`Wedstrijd voorbereiden tegen ${w.opponent}?\n\nDe huidige wedstrijddata wordt gewist.`)) return;
   if(displayInterval){clearInterval(displayInterval);displayInterval=null;}
   playtime={};
   match=EMPTY_MATCH();
@@ -2037,6 +2481,7 @@ function startFromSchedule(id){
   if(prevBench)  bench=prevBench;
   persist();
   showTab('wedstrijd');
+  showMatchSub('voorbereiding');
   updateScoreboard();renderTimerControls();updateTimerDisplay();renderEvents();renderPitch();
 }
 
@@ -2164,6 +2609,8 @@ async function exportAppWithPlayers(){
 
 // ── Init ──
 renderPitch();
+renderHome();
+renderVoorbereiding();
 updateScoreboard();
 renderTimerControls();
 updateTimerDisplay();
