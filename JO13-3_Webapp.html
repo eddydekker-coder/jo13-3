@@ -256,6 +256,9 @@
     <h1>⚽ JO13-3 FC Ommen</h1>
     <span id="matchTitle">Geen wedstrijd actief</span>
   </div>
+  <button id="syncBtn" onclick="openSyncModal()"
+    style="background:none;border:none;cursor:pointer;font-size:1.3rem;padding:4px 2px;line-height:1"
+    title="Synchronisatie">☁️</button>
 </header>
 
 <div class="tabs">
@@ -516,6 +519,66 @@
       <button class="btn btn-red" id="resetConfirmBtn" style="flex:1;opacity:.4" disabled
         onclick="performHardReset()">Definitief wissen</button>
       <button class="btn btn-gray" style="flex:1" onclick="closeModal('resetModal')">Annuleer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Synchronisatie -->
+<div class="modal-bg" id="syncModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('syncModal')">✕</button>
+    <h3>☁️ Synchronisatie</h3>
+    <div id="syncStatusBox" style="background:rgba(255,255,255,.06);border-radius:8px;
+      padding:11px;font-size:.8rem;line-height:1.6;margin-bottom:12px"></div>
+
+    <label>Worker-adres</label>
+    <input type="text" id="syncUrl" placeholder="jo13-3-sync.jouwnaam.workers.dev"
+      autocapitalize="off" autocorrect="off" spellcheck="false">
+    <label>Teamtoken</label>
+    <input type="password" id="syncToken" placeholder="het geheime woord uit de Worker"
+      autocapitalize="off" autocorrect="off" spellcheck="false">
+    <label>Naam van dit apparaat</label>
+    <input type="text" id="syncDevice" placeholder="bv. iPhone Eddy">
+
+    <div class="modal-checkbox">
+      <input type="checkbox" id="syncAuto" checked>
+      <label for="syncAuto">Automatisch synchroniseren (bij openen en elke minuut)</label>
+    </div>
+    <div class="modal-checkbox">
+      <input type="checkbox" id="syncContact">
+      <label for="syncContact">Ook contactgegevens van ouders meesturen</label>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-blue" style="flex:1" onclick="saveSyncSettings()">Opslaan</button>
+      <button class="btn btn-gray" style="flex:1" onclick="testSync()">Testen</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <button class="btn btn-green" style="flex:1;font-size:.78rem" onclick="syncNu(true)">⬆ Nu versturen</button>
+      <button class="btn btn-gray" style="flex:1;font-size:.78rem" onclick="haalSyncOp(true)">⬇ Nu ophalen</button>
+    </div>
+    <p style="font-size:.7rem;color:var(--muted);margin-top:12px;line-height:1.5">
+      Contactgegevens van ouders blijven standaard alleen op dit apparaat.
+      Wedstrijden, trainingen, speelminuten en opstellingen worden wel gedeeld.
+    </p>
+  </div>
+</div>
+
+<!-- Conflictmelding -->
+<div class="modal-bg" id="conflictModal">
+  <div class="modal">
+    <h3 style="color:var(--yellow)">⚠️ Verschillende versies</h3>
+    <div id="conflictTekst" style="font-size:.84rem;line-height:1.6;margin-bottom:14px"></div>
+    <div class="modal-actions" style="flex-direction:column;gap:8px">
+      <button class="btn btn-blue" style="width:100%" onclick="losConflictOp('ophalen')">
+        ⬇ Serverversie overnemen
+      </button>
+      <button class="btn btn-red" style="width:100%" onclick="losConflictOp('versturen')">
+        ⬆ Mijn versie doorzetten
+      </button>
+      <button class="btn btn-gray" style="width:100%" onclick="losConflictOp('later')">
+        Later beslissen
+      </button>
     </div>
   </div>
 </div>
@@ -1059,6 +1122,253 @@ function renderHome(){
 
   el.innerHTML=html;
 }
+
+// ══════════════════════════════════════════════════════
+// SYNCHRONISATIE (Cloudflare Worker)
+// ══════════════════════════════════════════════════════
+
+// Sleutels die gesynchroniseerd worden. Contactvelden van spelers worden
+// er apart uitgefilterd, tenzij de gebruiker dat expliciet aanzet.
+const SYNC_KEYS=['jo133_players','jo133_lineup','jo133_bench','jo133_match',
+  'jo133_playtime','jo133_attendance','jo133_schedule','jo133_history',
+  'jo133_preferred_lineup','jo133_preferred_bench'];
+const CONTACT_VELDEN=['p1','p1t','p2','p2t','email','notes','dob'];
+
+let syncCfg=ls('jo133_synccfg',{url:'',token:'',device:'',auto:true,contact:false});
+let syncState=ls('jo133_syncstate',{version:0,lastPush:null,lastPull:null});
+let syncTimer=null, syncBezig=false, conflictInfo=null;
+
+function saveSyncCfg(){ss('jo133_synccfg',syncCfg);}
+function saveSyncState(){ss('jo133_syncstate',syncState);}
+
+function syncIngesteld(){ return !!(syncCfg.url&&syncCfg.token); }
+
+function syncBasis(){
+  let u=String(syncCfg.url||'').trim().replace(/\/+$/,'');
+  if(u&&!/^https?:\/\//i.test(u)) u='https://'+u;
+  return u;
+}
+
+async function syncFetch(pad,opties={}){
+  const resp=await fetch(syncBasis()+pad,{
+    ...opties,
+    headers:{'Content-Type':'application/json','X-Team-Token':syncCfg.token,...(opties.headers||{})},
+  });
+  let data=null;
+  try{ data=await resp.json(); }catch{}
+  return {ok:resp.ok,status:resp.status,data};
+}
+
+// Momentopname van de lokale data, eventueel zonder contactgegevens
+function bouwPayload(){
+  const p={};
+  SYNC_KEYS.forEach(k=>{
+    const v=localStorage.getItem(k);
+    if(v!==null){ try{ p[k]=JSON.parse(v); }catch{} }
+  });
+  if(!syncCfg.contact&&Array.isArray(p.jo133_players)){
+    p.jo133_players=p.jo133_players.map(sp=>{
+      const kopie={...sp};
+      CONTACT_VELDEN.forEach(f=>delete kopie[f]);
+      return kopie;
+    });
+    p._contactWeggelaten=true;
+  }
+  return p;
+}
+
+// Binnengekomen data toepassen. Ontbrekende contactgegevens worden
+// aangevuld met wat er lokaal al stond, zodat ze niet verdwijnen.
+function pasPayloadToe(payload){
+  if(!payload) return;
+  const lokaleSpelers=ls('jo133_players',[]);
+  Object.entries(payload).forEach(([k,v])=>{
+    if(k.startsWith('_')||!SYNC_KEYS.includes(k)) return;
+    if(k==='jo133_players'&&Array.isArray(v)){
+      v=v.map(sp=>{
+        const oud=lokaleSpelers.find(o=>o.id===sp.id)||{};
+        const samen={...sp};
+        CONTACT_VELDEN.forEach(f=>{
+          if(samen[f]===undefined&&oud[f]!==undefined) samen[f]=oud[f];
+        });
+        return samen;
+      });
+    }
+    ss(k,v);
+  });
+}
+
+function herlaadUitOpslag(){
+  players =ls('jo133_players',DEFAULT_PLAYERS);
+  if(!players||!players.length) players=DEFAULT_PLAYERS;
+  lineup  =ls('jo133_lineup',lineup);
+  bench   =ls('jo133_bench',bench);
+  match   =Object.assign(EMPTY_MATCH(),ls('jo133_match',{}));
+  playtime=ls('jo133_playtime',{});
+  attendance=ls('jo133_attendance',{});
+  schedule=ls('jo133_schedule',schedule);
+  renderPitch();renderHome();renderVoorbereiding();
+  updateScoreboard();renderTimerControls();updateTimerDisplay();renderEvents();
+  renderProgramma();renderTrainingList();renderSpeeltijd();renderPlayerList();
+}
+
+// ── Versturen ──
+async function syncNu(handmatig){
+  if(!syncIngesteld()){ if(handmatig) alert('Stel eerst het Worker-adres en token in.'); return; }
+  if(syncBezig) return;
+  syncBezig=true;
+  try{
+    const r=await syncFetch('/data',{method:'PUT',body:JSON.stringify({
+      baseVersion:syncState.version,
+      device:syncCfg.device||'onbekend',
+      payload:bouwPayload(),
+    })});
+    if(r.status===409){
+      conflictInfo=r.data;
+      toonConflict(r.data);
+      return false;
+    }
+    if(!r.ok){ if(handmatig) alert('Versturen mislukt: '+(r.data?.error||r.status)); return false; }
+    syncState.version=r.data.version;
+    syncState.lastPush=r.data.updated;
+    saveSyncState();
+    toonSyncStatus();
+    if(handmatig) alert('Gegevens verstuurd (versie '+r.data.version+').');
+    return true;
+  }catch(e){
+    if(handmatig) alert('Geen verbinding met de server.\n\n'+e.message);
+    return false;
+  }finally{ syncBezig=false; }
+}
+
+// ── Ophalen ──
+async function haalSyncOp(handmatig){
+  if(!syncIngesteld()){ if(handmatig) alert('Stel eerst het Worker-adres en token in.'); return; }
+  if(syncBezig) return;
+  syncBezig=true;
+  try{
+    const r=await syncFetch('/data');
+    if(!r.ok){ if(handmatig) alert('Ophalen mislukt: '+(r.data?.error||r.status)); return false; }
+    if(!r.data||!r.data.payload){ if(handmatig) alert('Er staat nog niets op de server.'); return false; }
+    pasPayloadToe(r.data.payload);
+    syncState.version=r.data.version||0;
+    syncState.lastPull=r.data.updated||null;
+    saveSyncState();
+    herlaadUitOpslag();
+    toonSyncStatus();
+    if(handmatig) alert('Gegevens opgehaald (versie '+syncState.version+').');
+    return true;
+  }catch(e){
+    if(handmatig) alert('Geen verbinding met de server.\n\n'+e.message);
+    return false;
+  }finally{ syncBezig=false; }
+}
+
+// ── Automatische cyclus ──
+// Eerst kijken of de server nieuwer is; zo ja ophalen, anders versturen.
+async function autoSync(){
+  if(!syncIngesteld()||!syncCfg.auto||syncBezig) return;
+  if(document.querySelector('.modal-bg.open')) return; // niet tijdens invoer
+  try{
+    const meta=await syncFetch('/meta');
+    if(!meta.ok) return;
+    const serverVersie=meta.data?.version||0;
+    if(serverVersie>syncState.version) await haalSyncOp(false);
+    else await syncNu(false);
+  }catch{ /* stilhouden bij netwerkstoring */ }
+}
+
+function startAutoSync(){
+  if(syncTimer) clearInterval(syncTimer);
+  if(syncIngesteld()&&syncCfg.auto){
+    syncTimer=setInterval(autoSync,60000);
+    autoSync();
+  }
+}
+
+// ── Conflict ──
+function toonConflict(info){
+  const wanneer=info.serverUpdated
+    ? new Date(info.serverUpdated).toLocaleString('nl-NL',{dateStyle:'short',timeStyle:'short'})
+    : 'onbekend';
+  document.getElementById('conflictTekst').innerHTML=
+    `Op de server staat een nieuwere versie dan die van dit apparaat.<br><br>`+
+    `<b>Server:</b> versie ${info.serverVersion}, opgeslagen ${wanneer}`+
+    (info.serverDevice?` vanaf <b>${info.serverDevice}</b>`:'')+`<br>`+
+    `<b>Dit apparaat:</b> versie ${syncState.version}<br><br>`+
+    `Doorzetten overschrijft de wijzigingen van het andere apparaat.`;
+  openModal('conflictModal');
+}
+
+async function losConflictOp(keuze){
+  closeModal('conflictModal');
+  if(keuze==='ophalen'){ await haalSyncOp(true); }
+  else if(keuze==='versturen'){
+    syncState.version=conflictInfo?.serverVersion??syncState.version;
+    saveSyncState();
+    await syncNu(true);
+  }
+  conflictInfo=null;
+}
+
+// ── Instellingenscherm ──
+function openSyncModal(){
+  document.getElementById('syncUrl').value=syncCfg.url||'';
+  document.getElementById('syncToken').value=syncCfg.token||'';
+  document.getElementById('syncDevice').value=syncCfg.device||'';
+  document.getElementById('syncAuto').checked=syncCfg.auto!==false;
+  document.getElementById('syncContact').checked=!!syncCfg.contact;
+  toonSyncStatus();
+  openModal('syncModal');
+}
+
+function saveSyncSettings(){
+  syncCfg={
+    url:document.getElementById('syncUrl').value.trim(),
+    token:document.getElementById('syncToken').value.trim(),
+    device:document.getElementById('syncDevice').value.trim(),
+    auto:document.getElementById('syncAuto').checked,
+    contact:document.getElementById('syncContact').checked,
+  };
+  saveSyncCfg();
+  startAutoSync();
+  toonSyncStatus();
+  werkSyncIconBij();
+  alert('Instellingen opgeslagen.');
+}
+
+async function testSync(){
+  if(!syncIngesteld()){ alert('Vul eerst het adres en het token in.'); return; }
+  try{
+    const r=await syncFetch('/meta');
+    if(r.status===401) alert('Verbinding gelukt, maar het token klopt niet.');
+    else if(!r.ok) alert('Server antwoordde met foutcode '+r.status);
+    else alert('Verbinding werkt.\n\nServerversie: '+(r.data?.version||0)+
+      (r.data?.device?'\nLaatst bijgewerkt vanaf: '+r.data.device:''));
+  }catch(e){ alert('Geen verbinding.\n\nControleer het adres.\n\n'+e.message); }
+}
+
+function toonSyncStatus(){
+  const el=document.getElementById('syncStatusBox');
+  if(!el) return;
+  if(!syncIngesteld()){
+    el.innerHTML='⚪️ <b>Nog niet ingesteld</b><br>'+
+      '<span style="color:var(--muted)">Gegevens staan alleen op dit apparaat.</span>';
+    return;
+  }
+  const t=s=>s?new Date(s).toLocaleString('nl-NL',{dateStyle:'short',timeStyle:'short'}):'nog niet';
+  el.innerHTML=`${syncCfg.auto?'🟢':'🟡'} <b>${syncCfg.auto?'Automatisch actief':'Alleen handmatig'}</b><br>`+
+    `<span style="color:var(--muted)">Versie ${syncState.version} · `+
+    `verstuurd ${t(syncState.lastPush)} · opgehaald ${t(syncState.lastPull)}</span>`;
+}
+
+function werkSyncIconBij(){
+  const b=document.getElementById('syncBtn');
+  if(b) b.textContent=syncIngesteld()?(syncCfg.auto?'☁️':'🌥'):'⛅';
+}
+
+// Bij terugkeer naar de app meteen bijwerken
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) autoSync(); });
 
 // ══════════════════════════════════════════════════════
 // BEHEER / TESTDATA
@@ -2608,6 +2918,8 @@ async function exportAppWithPlayers(){
 }
 
 // ── Init ──
+werkSyncIconBij();
+startAutoSync();
 renderPitch();
 renderHome();
 renderVoorbereiding();
