@@ -88,6 +88,8 @@
   /* Training */
   .training-day{background:var(--card);border-radius:16px;padding:13px 15px;margin-bottom:8px;
     border:1px solid var(--border);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+  .training-day.vervallen{opacity:.55;border-style:dashed}
+  .td-badge.vervallen{background:var(--muted);color:#fff}
   .training-day.holiday{border-color:#e8d9a8;background:#fdfaf0;opacity:.85;cursor:default}
   .training-day.done{border-color:#b9ddc8}
   .td-date{font-weight:600;font-size:.92rem}
@@ -214,6 +216,9 @@
   .pc-info{flex:1}
   .pc-name{font-weight:600;font-size:.92rem}
   .pc-pos{font-size:.76rem;color:var(--muted)}
+  .pc-note{font-size:.74rem;color:var(--text);background:rgba(31,122,77,.09);
+    border-left:3px solid var(--accent);border-radius:0 6px 6px 0;
+    padding:5px 8px;margin-top:5px;line-height:1.4;white-space:pre-wrap}
   .pc-edit{background:none;border:1px solid var(--border);border-radius:10px;padding:5px 12px;
     color:var(--muted);font-family:inherit;font-size:.76rem;font-weight:500;cursor:pointer}
 
@@ -272,6 +277,7 @@
   <button class="tab" onclick="showTab('spelers')">👥 Spelers</button>
   <button class="tab" onclick="showTab('training')">📅 Training</button>
   <button class="tab" onclick="showTab('statistieken')">📊 Statistieken</button>
+  <button class="tab" onclick="showTab('beheer')">⚙️ Beheer</button>
 </div>
 
 <!-- ═══════════════ HOME ═══════════════ -->
@@ -281,6 +287,12 @@
 
 <!-- ═══════════════ PROGRAMMA ═══════════════ -->
 <div class="view" id="view-programma">
+  <div class="subtabs">
+    <button class="subtab active" id="subtab-wedstrijden" onclick="showProgSub('wedstrijden')">🏆 Wedstrijden</button>
+    <button class="subtab" id="subtab-schema" onclick="showProgSub('schema')">🧺 Was &amp; rij</button>
+  </div>
+
+  <div id="progsub-wedstrijden">
   <div style="display:flex;gap:8px;margin-bottom:12px">
     <button class="btn btn-blue" style="flex:none;padding:8px 12px;font-size:.78rem" onclick="openAddWedstrijd()">+ Wedstrijd</button>
     <a href="https://www.voetbal.nl/profiel/programma" target="_blank" rel="noopener"
@@ -289,6 +301,19 @@
     </a>
   </div>
   <div id="programmaList"></div>
+  </div>
+
+  <div id="progsub-schema" style="display:none">
+    <div class="hc-sub" style="margin-bottom:10px">
+      Wie wast en wie rijdt. De app verdeelt het eerlijk, maar je kunt elke rij zelf aanpassen.
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="btn btn-gray" style="flex:none;padding:8px 12px;font-size:.76rem" onclick="herverdeelSchema()">🔄 Opnieuw verdelen</button>
+      <button class="btn btn-gray" style="flex:none;padding:8px 12px;font-size:.76rem" onclick="toonSchemaBalans()">⚖️ Balans</button>
+    </div>
+    <div id="schemaLijst"></div>
+    <div style="height:20px"></div>
+  </div>
 </div>
 
 <!-- ═══════════════ WEDSTRIJD ═══════════════ -->
@@ -353,13 +378,8 @@
 
     <div class="match-controls">
       <button class="btn btn-green" onclick="logGoal('thuis')">⚽ Doelpunt</button>
-      <button class="btn btn-red" onclick="logGoal('tegen')">💀 Tegendoelpunt</button>
+      <button class="btn btn-red" onclick="logGoal('tegen')">🔴 Tegendoelpunt</button>
       <button class="btn btn-yellow" onclick="openSubModal()">🔄 Wissel</button>
-    </div>
-
-    <div class="match-controls">
-      <button class="btn btn-gray" style="font-size:.75rem" onclick="resetHuidigeWedstrijd()">🧪 Wedstrijd resetten</button>
-      <button class="btn btn-gray" style="font-size:.75rem" onclick="openBeheerModal()">🗂 Beheer data</button>
     </div>
 
     <div class="section-title">Wedstrijdverloop</div>
@@ -374,15 +394,7 @@
   <div style="display:flex;gap:8px;margin-bottom:10px">
     <input id="searchInput" placeholder="🔍 Zoek speler…" oninput="renderPlayerList()"
       style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:.9rem">
-    <button class="btn btn-blue" style="flex:none;padding:8px 12px;font-size:.8rem" onclick="document.getElementById('excelImport').click()">📥 Excel</button>
-    <input type="file" id="excelImport" accept=".xlsx" style="display:none" onchange="importFromExcel(event)">
     <button class="btn btn-green" style="flex:none;padding:8px 12px;font-size:.8rem" onclick="exportAppWithPlayers()">📤 App</button>
-  </div>
-  <div style="display:flex;gap:8px;margin-bottom:10px">
-    <button class="btn btn-gray" style="font-size:.75rem;padding:7px" onclick="downloadBackup()">💾 Back-up</button>
-    <button class="btn btn-gray" style="font-size:.75rem;padding:7px" onclick="document.getElementById('backupRestore').click()">♻️ Terugzetten</button>
-    <input type="file" id="backupRestore" accept=".json" style="display:none" onchange="restoreBackup(event)">
-    <button class="btn btn-red" style="font-size:.75rem;padding:7px" onclick="hardReset()">🗑 Herstel</button>
   </div>
   <div id="importStatus" style="display:none;background:rgba(0,168,107,.15);border:1px solid var(--accent);border-radius:8px;padding:10px;font-size:.82rem;margin-bottom:10px"></div>
   <div id="playerList"></div>
@@ -407,8 +419,69 @@
   <div id="speeltijdList"></div>
   <div class="section-title" style="margin-top:20px">Speelminuten seizoen</div>
   <div id="seizoenList"></div>
-  <div class="section-title" style="margin-top:20px">Trainingsopkomst</div>
+  <div class="section-title" style="margin-top:20px">Trainingsopkomst <span style="text-transform:none;letter-spacing:0;font-weight:400">(laatste 10)</span></div>
   <div id="trainingScoreList" style="padding-bottom:20px"></div>
+</div>
+
+<!-- ═══════════════ BEHEER ═══════════════ -->
+<div class="view" id="view-beheer">
+  <div class="section-title" style="margin-top:0">Gegevens uitwisselen</div>
+  <div class="home-card">
+    <div class="hc-label">Spelersbestand</div>
+    <div class="hc-sub" style="margin-bottom:10px">
+      Lees de Excel opnieuw in om namen, rugnummers, posities en contactgegevens bij te werken.
+      Kolom D is het rugnummer.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-blue" onclick="document.getElementById('excelImport').click()">📥 Excel inladen</button>
+      <input type="file" id="excelImport" accept=".xlsx" style="display:none" onchange="importFromExcel(event)">
+      <button class="btn btn-gray" onclick="exportSeizoensrapport()">📊 Rapport maken</button>
+    </div>
+    <div id="importStatus" style="display:none;background:rgba(31,122,77,.12);border:1px solid var(--accent);border-radius:8px;padding:10px;font-size:.82rem;margin-top:10px"></div>
+  </div>
+
+  <div class="home-card">
+    <div class="hc-label">Back-up</div>
+    <div class="hc-sub" style="margin-bottom:10px">
+      Een back-up bevat álles, ook de contactgegevens. Handig om over te zetten naar een ander apparaat.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-green" onclick="downloadBackup()">💾 Back-up maken</button>
+      <button class="btn btn-gray" onclick="document.getElementById('backupRestore').click()">♻️ Terugzetten</button>
+      <input type="file" id="backupRestore" accept=".json" style="display:none" onchange="restoreBackup(event)">
+    </div>
+  </div>
+
+  <div class="home-card">
+    <div class="hc-label">Synchronisatie</div>
+    <div id="beheerSyncStatus" class="hc-sub" style="margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-blue" onclick="openSyncModal()">☁️ Instellingen</button>
+      <button class="btn btn-gray" onclick="syncNu(true)">⬆ Versturen</button>
+      <button class="btn btn-gray" onclick="haalSyncOp(true)">⬇ Ophalen</button>
+    </div>
+  </div>
+
+  <div class="section-title">Opruimen</div>
+  <div class="home-card">
+    <div class="hc-label">Losse gegevens</div>
+    <div class="hc-sub" style="margin-bottom:10px">
+      Verwijder losse wedstrijden of trainingen, bijvoorbeeld na het testen.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-gray" onclick="openBeheerModal()">🗂 Wedstrijden & trainingen</button>
+      <button class="btn btn-gray" onclick="resetHuidigeWedstrijd()">🧪 Lopende wedstrijd resetten</button>
+    </div>
+  </div>
+
+  <div class="home-card" style="border-color:var(--red)">
+    <div class="hc-label" style="color:var(--red)">Alles wissen</div>
+    <div class="hc-sub" style="margin-bottom:10px">
+      Verwijdert alle gegevens van dít apparaat. Maak eerst een back-up.
+    </div>
+    <button class="btn btn-red" style="width:100%" onclick="hardReset()">🗑 Herstel naar beginstand</button>
+  </div>
+  <div style="height:20px"></div>
 </div>
 
 <!-- ══ MODALS ══ -->
@@ -647,7 +720,8 @@
     <div id="trainingAttendRows"></div>
     <div class="modal-actions" style="margin-top:12px">
       <button class="btn btn-green" style="flex:2" onclick="saveTrainingSession()">Opslaan ✓</button>
-      <button class="btn btn-gray" style="flex:1;font-size:.75rem" onclick="wisHuidigeTraining()">🗑 Wissen</button>
+      <button class="btn btn-gray" style="flex:1;font-size:.73rem" onclick="wisHuidigeTraining()">🗑 Wissen</button>
+      <button class="btn btn-gray" style="flex:1;font-size:.73rem" onclick="vervalHuidigeTraining()">🚫 Vervalt</button>
     </div>
   </div>
 </div>
@@ -681,6 +755,43 @@
     </div>
     <button class="btn btn-red" id="wDeleteBtn" style="width:100%;margin-top:10px;display:none"
       onclick="verwijderWedstrijd()">🗑 Wedstrijd verwijderen</button>
+  </div>
+</div>
+
+<!-- Was- en rijschema per wedstrijd -->
+<div class="modal-bg" id="schemaModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('schemaModal')">✕</button>
+    <h3 id="schemaTitel">🧺 Taken</h3>
+    <input type="hidden" id="schemaWedstrijdId">
+    <label>Wast de shirts</label>
+    <select id="schemaWasser"></select>
+    <div id="schemaRijBlok">
+      <div class="section-title" style="margin-top:14px">Rijders (uitwedstrijd)</div>
+      <div id="schemaRijders"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-green" style="flex:1" onclick="bewaarSchema()">Opslaan</button>
+      <button class="btn btn-gray" style="flex:1" onclick="closeModal('schemaModal')">Annuleer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notitie -->
+<div class="modal-bg" id="notitieModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('notitieModal')">✕</button>
+    <h3 id="notitieTitel">📝 Notitie</h3>
+    <input type="hidden" id="notitieSpelerId">
+    <label>Opmerking</label>
+    <textarea id="notitieTekst" rows="5" placeholder="bv. blessure knie, links sterker, heeft moeite met concentratie…"
+      style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);
+             background:var(--card);color:var(--text);font-size:.9rem;font-family:inherit;resize:vertical"></textarea>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px" id="notitieSnel"></div>
+    <div class="modal-actions">
+      <button class="btn btn-green" style="flex:2" onclick="bewaarNotitie()">Opslaan</button>
+      <button class="btn btn-gray" style="flex:1" onclick="wisNotitie()">Wissen</button>
+    </div>
   </div>
 </div>
 
@@ -802,8 +913,8 @@ const FORMATIONS = {
     {nr:1,  posX:50, posY:92},                                             // keeper
     {nr:5,  posX:12, posY:73},{nr:4, posX:37, posY:75},                    // linksback, centraal links
     {nr:3,  posX:65, posY:75},{nr:2, posX:88, posY:73},                    // centraal rechts, rechtsback
-    {nr:6,  posX:50, posY:57},                                             // controleur
-    {nr:10, posX:34, posY:46},{nr:8, posX:68, posY:46},                    // middenvelders
+    {nr:6,  posX:34, posY:58},{nr:8, posX:66, posY:58},                    // twee controleurs
+    {nr:10, posX:50, posY:42},                                             // aanvallende middenvelder (punt naar voren)
     {nr:11, posX:15, posY:28},{nr:9, posX:50, posY:24},{nr:7, posX:86, posY:28}, // buitenspelers + spits
   ],
   '433':  [{nr:1,posX:50,posY:92},{posX:15,posY:70},{posX:37,posY:72},{posX:63,posY:72},{posX:85,posY:70},
@@ -818,16 +929,22 @@ const FORMATIONS = {
 };
 
 const STANDAARD_FORMATIE='ommen';
+let huidigeFormatie=ls('jo133_formatie',STANDAARD_FORMATIE);
+if(!FORMATIONS[huidigeFormatie]) huidigeFormatie=STANDAARD_FORMATIE;
 
 if(lineup.length===0) applyFormation(true);
 
 function applyFormation(init){
   const sel=document.getElementById('formationSelect');
-  const key=init?STANDAARD_FORMATIE:(sel?sel.value:STANDAARD_FORMATIE);
-  if(init&&sel) sel.value=STANDAARD_FORMATIE;
-  const slots=FORMATIONS[key]||FORMATIONS[STANDAARD_FORMATIE];
+  const key=init?huidigeFormatie:(sel?sel.value:huidigeFormatie);
+  huidigeFormatie=FORMATIONS[key]?key:STANDAARD_FORMATIE;
+  ss('jo133_formatie',huidigeFormatie);
+  if(sel) sel.value=huidigeFormatie;
+  const slots=FORMATIONS[huidigeFormatie];
 
-  const vrij=new Set(players.map(p=>p.id));
+  // Afwezige spelers komen niet in het veld te staan
+  const afwezig=new Set(match.absent||[]);
+  const vrij=new Set(players.filter(p=>!afwezig.has(p.id)).map(p=>p.id));
   const nieuw=slots.map(s=>({playerId:null,posX:s.posX,posY:s.posY,nr:s.nr||null}));
 
   // 1. Slots met een rugnummer krijgen de speler met dat nummer
@@ -849,9 +966,13 @@ function applyFormation(init){
   });
 
   lineup=nieuw;
-  bench=players.filter(p=>vrij.has(p.id)).sort((a,b)=>a.nr-b.nr).map(p=>p.id);
+  // Bank: alle overgebleven spelers, afwezigen achteraan (worden niet getoond)
+  bench=players.filter(p=>vrij.has(p.id)||afwezig.has(p.id))
+    .sort((a,b)=>(afwezig.has(a.id)?1:0)-(afwezig.has(b.id)?1:0)||a.nr-b.nr)
+    .map(p=>p.id);
   persist();
   renderPitch();
+  if(typeof renderVoorbereiding==='function') renderVoorbereiding();
 }
 
 // ══════════════════════════════════════════════════════
@@ -1014,14 +1135,166 @@ function formatLangeDatum(d){
   return `${LANGE_DAGEN[d.getDay()]} ${d.getDate()} ${LANGE_MAANDEN[d.getMonth()]}`;
 }
 
-// Wasrotatie: alfabetisch op naam, één gezin per wedstrijd — gelijk aan de Excel.
-function wasserVoor(index){
-  if(!players.length) return null;
+// ══════════════════════════════════════════════════════
+// WAS- EN RIJSCHEMA
+// ══════════════════════════════════════════════════════
+// Opslag: { wedstrijdId: {wasser:spelerId, rijders:[spelerId,...]} }
+// Handmatige aanpassingen blijven staan bij een herverdeling.
+
+const AUTOS_PER_UITWEDSTRIJD=5;
+let taken=ls('jo133_taken',{});
+function persistTaken(){ss('jo133_taken',taken);}
+
+function chronologisch(){
+  return [...schedule].sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+// Eerlijke basisverdeling: alfabetisch roterend, net als in de Excel
+function berekenSchema(){
+  const rij=chronologisch();
   const alfabet=[...players].sort((a,b)=>a.naam.localeCompare(b.naam,'nl'));
-  return alfabet[index%alfabet.length];
+  if(!alfabet.length) return {};
+  const N=alfabet.length;
+  const uit=rij.filter(w=>w.homeAway==='Uit');
+  let ptr=5;
+  const nieuw={};
+  rij.forEach((w,i)=>{
+    const wasser=alfabet[i%N];
+    let rijders=[];
+    if(w.homeAway==='Uit'){
+      while(rijders.length<Math.min(AUTOS_PER_UITWEDSTRIJD,N)){
+        const kand=alfabet[ptr%N]; ptr++;
+        if(!rijders.includes(kand.id)) rijders.push(kand.id);
+      }
+      // Wie wast, rijdt die dag liever niet
+      if(rijders.includes(wasser.id)){
+        const vervanger=alfabet.find(p=>p.id!==wasser.id&&!rijders.includes(p.id));
+        if(vervanger) rijders[rijders.indexOf(wasser.id)]=vervanger.id;
+      }
+    }
+    nieuw[w.id]={wasser:wasser.id,rijders};
+  });
+  return nieuw;
+}
+
+// Vul ontbrekende wedstrijden aan zonder bestaande keuzes te overschrijven
+function vulSchemaAan(){
+  const basis=berekenSchema();
+  let gewijzigd=false;
+  Object.entries(basis).forEach(([id,v])=>{
+    if(!taken[id]){ taken[id]=v; gewijzigd=true; }
+  });
+  Object.keys(taken).forEach(id=>{
+    if(!schedule.some(w=>w.id===id)){ delete taken[id]; gewijzigd=true; }
+  });
+  if(gewijzigd) persistTaken();
+}
+
+function herverdeelSchema(){
+  if(!confirm('Het hele schema opnieuw verdelen?\n\nHandmatige aanpassingen gaan verloren.')) return;
+  taken=berekenSchema();
+  persistTaken();
+  renderSchema();
+}
+
+function wasserVoorWedstrijd(w){
+  const t=taken[w?.id];
+  return t?players.find(p=>p.id===t.wasser):null;
+}
+
+// Wie heeft de shirts nu in huis: de wasser van de laatst gespeelde wedstrijd
+function wasserVoor(index){
+  const rij=chronologisch();
+  return wasserVoorWedstrijd(rij[index]);
+}
+
+function renderSchema(){
+  const el=document.getElementById('schemaLijst');
+  if(!el) return;
+  vulSchemaAan();
+  const rij=chronologisch();
+  if(!rij.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:.85rem;padding:16px;text-align:center">Nog geen wedstrijden in het programma.</div>';
+    return;
+  }
+  const naam=id=>{const p=players.find(x=>x.id===id);return p?shortName(p.naam):'—';};
+  el.innerHTML=rij.map(w=>{
+    const t=taken[w.id]||{};
+    const d=new Date(w.date+'T00:00:00');
+    const uit=w.homeAway==='Uit';
+    return`<div class="wedstrijd-item" onclick="openSchema('${w.id}')" style="cursor:pointer">
+      <div class="wi-top">
+        <div style="flex:1">
+          <div class="wi-opp">${uit?'✈️':'🏠'} ${w.opponent}</div>
+          <div class="wi-meta">${formatTrainDate(d)}</div>
+          <div style="font-size:.78rem;margin-top:6px">🧺 <b>${naam(t.wasser)}</b></div>
+          ${uit?`<div style="font-size:.76rem;color:var(--muted);margin-top:3px">🚗 ${
+            (t.rijders||[]).map(naam).join(' · ')||'nog niemand'}</div>`:''}
+        </div>
+        <button class="pc-edit">✏</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toonSchemaBalans(){
+  vulSchemaAan();
+  const was={},rij={};
+  players.forEach(p=>{was[p.id]=0;rij[p.id]=0;});
+  Object.values(taken).forEach(t=>{
+    if(was[t.wasser]!==undefined) was[t.wasser]++;
+    (t.rijders||[]).forEach(id=>{ if(rij[id]!==undefined) rij[id]++; });
+  });
+  const regels=[...players].sort((a,b)=>a.naam.localeCompare(b.naam,'nl'))
+    .map(p=>`${p.naam}: ${was[p.id]}x wassen, ${rij[p.id]}x rijden`).join('\n');
+  alert('Verdeling over '+Object.keys(taken).length+' wedstrijden\n\n'+regels);
+}
+
+function openSchema(id){
+  const w=schedule.find(x=>x.id===id);
+  if(!w) return;
+  vulSchemaAan();
+  const t=taken[id]||{wasser:null,rijders:[]};
+  document.getElementById('schemaTitel').textContent='🧺 '+w.opponent;
+  document.getElementById('schemaWedstrijdId').value=id;
+  const opties=sel=>['<option value="">— niemand —</option>',
+    ...[...players].sort((a,b)=>a.naam.localeCompare(b.naam,'nl'))
+      .map(p=>`<option value="${p.id}" ${sel===p.id?'selected':''}>${p.naam}</option>`)].join('');
+  document.getElementById('schemaWasser').innerHTML=opties(t.wasser);
+  const uit=w.homeAway==='Uit';
+  document.getElementById('schemaRijBlok').style.display=uit?'block':'none';
+  if(uit){
+    document.getElementById('schemaRijders').innerHTML=
+      Array.from({length:AUTOS_PER_UITWEDSTRIJD},(_,i)=>
+        `<label style="margin-top:8px">Auto ${i+1}</label>
+         <select class="schema-rijder">${opties((t.rijders||[])[i])}</select>`).join('');
+  }
+  openModal('schemaModal');
+}
+
+function bewaarSchema(){
+  const id=document.getElementById('schemaWedstrijdId').value;
+  const wasser=+document.getElementById('schemaWasser').value||null;
+  const rijders=[...document.querySelectorAll('.schema-rijder')]
+    .map(s=>+s.value).filter(Boolean);
+  taken[id]={wasser,rijders};
+  persistTaken();
+  closeModal('schemaModal');
+  renderSchema();
+  renderHome();
+}
+
+function showProgSub(which){
+  document.getElementById('subtab-wedstrijden').classList.toggle('active',which==='wedstrijden');
+  document.getElementById('subtab-schema').classList.toggle('active',which==='schema');
+  document.getElementById('progsub-wedstrijden').style.display=which==='wedstrijden'?'block':'none';
+  document.getElementById('progsub-schema').style.display=which==='schema'?'block':'none';
+  if(which==='schema') renderSchema();
+  else renderProgramma();
 }
 
 function renderHome(){
+  vulSchemaAan();
   const el=document.getElementById('homeDashboard');
   const history=ls('jo133_history',[]);
   const gesorteerd=[...schedule].sort((a,b)=>a.date.localeCompare(b.date));
@@ -1111,7 +1384,7 @@ function renderHome(){
   // ── Top 5 speelminuten ──
   const seizoenMin={};
   history.forEach(m=>Object.entries(m.playtime||{}).forEach(([id,secs])=>{
-    seizoenMin[+id]=(seizoenMin[+id]||0)+Math.floor(secs/60);
+    seizoenMin[+id]=(seizoenMin[+id]||0)+minutenUit(secs);
   }));
   const top5m=players.map(p=>({p,min:seizoenMin[p.id]||0}))
     .filter(x=>x.min>0).sort((a,b)=>b.min-a.min).slice(0,5);
@@ -1135,7 +1408,8 @@ function renderHome(){
 // er apart uitgefilterd, tenzij de gebruiker dat expliciet aanzet.
 const SYNC_KEYS=['jo133_players','jo133_lineup','jo133_bench','jo133_match',
   'jo133_playtime','jo133_attendance','jo133_schedule','jo133_history',
-  'jo133_preferred_lineup','jo133_preferred_bench'];
+  'jo133_preferred_lineup','jo133_preferred_bench',
+  'jo133_taken','jo133_vervallen','jo133_formatie'];
 const CONTACT_VELDEN=['p1','p1t','p2','p2t','email','notes','dob'];
 
 let syncCfg=ls('jo133_synccfg',{url:'',token:'',device:'',auto:true,contact:false});
@@ -1225,6 +1499,8 @@ function herlaadUitOpslag(){
   playtime=ls('jo133_playtime',{});
   attendance=ls('jo133_attendance',{});
   schedule=ls('jo133_schedule',schedule);
+  taken=ls('jo133_taken',{});
+  vervallen=ls('jo133_vervallen',[]);
   renderPitch();renderHome();renderVoorbereiding();
   updateScoreboard();renderTimerControls();updateTimerDisplay();renderEvents();
   renderProgramma();renderTrainingList();renderSpeeltijd();renderPlayerList();
@@ -1234,9 +1510,15 @@ function herlaadUitOpslag(){
 async function syncNu(handmatig){
   if(!syncIngesteld()){ if(handmatig) alert('Stel eerst het Worker-adres en token in.'); return; }
   // Handmatige acties wachten netjes op een lopende achtergrondsync
-  if(syncLopend||autoLopend){
+  // Onderling uitsluiten van versturen/ophalen
+  if(syncLopend){
     if(!handmatig) return;
-    try{ await (syncLopend||autoLopend); }catch{}
+    try{ await syncLopend; }catch{}
+  }
+  // Een handmatige actie wacht ook op een lopende automatische cyclus;
+  // de cyclus zelf roept dit intern aan en mag niet op zichzelf wachten.
+  if(handmatig&&autoLopend){
+    try{ await autoLopend; }catch{}
   }
   const taak=(async()=>{
   try{
@@ -1272,9 +1554,15 @@ async function syncNu(handmatig){
 // ── Ophalen ──
 async function haalSyncOp(handmatig){
   if(!syncIngesteld()){ if(handmatig) alert('Stel eerst het Worker-adres en token in.'); return; }
-  if(syncLopend||autoLopend){
+  // Onderling uitsluiten van versturen/ophalen
+  if(syncLopend){
     if(!handmatig) return;
-    try{ await (syncLopend||autoLopend); }catch{}
+    try{ await syncLopend; }catch{}
+  }
+  // Een handmatige actie wacht ook op een lopende automatische cyclus;
+  // de cyclus zelf roept dit intern aan en mag niet op zichzelf wachten.
+  if(handmatig&&autoLopend){
+    try{ await autoLopend; }catch{}
   }
   const taak=(async()=>{
   try{
@@ -1427,6 +1715,19 @@ async function testSync(){
     else alert('Verbinding werkt.\n\nServerversie: '+(r.data?.version||0)+
       (r.data?.device?'\nLaatst bijgewerkt vanaf: '+r.data.device:''));
   }catch(e){ alert('Geen verbinding.\n\nControleer het adres.\n\n'+e.message); }
+}
+
+function renderBeheerTab(){
+  const el=document.getElementById('beheerSyncStatus');
+  if(!el) return;
+  if(!syncIngesteld()){
+    el.innerHTML='Nog niet ingesteld — gegevens staan alleen op dit apparaat.';
+    return;
+  }
+  const open=heeftLokaleWijzigingen();
+  el.innerHTML=`${syncCfg.auto?'🟢 Automatisch actief':'🟡 Alleen handmatig'} · versie ${syncState.version}<br>`+
+    (open?'<span style="color:var(--yellow)">✎ Er staan wijzigingen klaar</span>'
+         :'<span style="color:var(--accent)">✓ Gelijk aan de server</span>');
 }
 
 function toonSyncStatus(){
@@ -1756,11 +2057,18 @@ function getElapsed(halfIdx){
 }
 
 // Leg speeltijd vast voor alle huidige veldspelers
+const WEDSTRIJD_MINUTEN=60;
+const WEDSTRIJD_SECONDEN=WEDSTRIJD_MINUTEN*60;
+
+// Niemand kan meer dan een hele wedstrijd spelen
+function begrensSpeeltijd(secs){ return Math.min(secs,WEDSTRIJD_SECONDEN); }
+function minutenUit(secs){ return Math.min(Math.round(secs/60),WEDSTRIJD_MINUTEN); }
+
 function snapshotPlaytime(){
   if(!match.lastSnapshotTime) return;
   const elapsed=Math.floor((Date.now()-match.lastSnapshotTime)/1000);
   lineup.forEach(slot=>{
-    if(slot.playerId) playtime[slot.playerId]=(playtime[slot.playerId]||0)+elapsed;
+    if(slot.playerId) playtime[slot.playerId]=begrensSpeeltijd((playtime[slot.playerId]||0)+elapsed);
   });
   match.lastSnapshotTime=null;
 }
@@ -1995,7 +2303,7 @@ let pendingGoalType=null;
 function logGoal(type){
   if(!match.opponent){alert('Start eerst een wedstrijd.');return;}
   pendingGoalType=type;
-  document.getElementById('goalModalTitle').textContent=type==='thuis'?'⚽ Doelpunt FC Ommen':'💀 Tegendoelpunt';
+  document.getElementById('goalModalTitle').textContent=type==='thuis'?'⚽ Doelpunt FC Ommen':'🔴 Tegendoelpunt';
   // Tegendoelpunt: alleen minuut
   document.getElementById('goalOwnFields').style.display=type==='thuis'?'block':'none';
   if(type==='thuis'){
@@ -2080,7 +2388,7 @@ function renderEvents(){
   el.innerHTML=[...match.events].reverse().map((ev,ri)=>{
     const i=match.events.length-1-ri;
     if(ev.type==='goal'){
-      const icon=ev.team==='thuis'?'⚽':'💀';
+      const icon=ev.team==='thuis'?'⚽':'🔴';
       const assist=ev.assist?` <span style="color:var(--muted)">(assist: ${ev.assist})</span>`:'';
       return `<div class="event-item goal">
         <span class="ev-min">${ev.minute}'</span>
@@ -2134,7 +2442,7 @@ function exportExcel(){
   const ws2data=[
     ['Speler','Positie','Minuten gespeeld','Doelpunten','Assists'],
     ...players.map(p=>{
-      const mins=Math.floor((playtime[p.id]||0)/60);
+      const mins=minutenUit(playtime[p.id]||0);
       const goals=(match.events||[]).filter(e=>e.type==='goal'&&e.team==='thuis'&&e.scorer===p.naam).length;
       const assists=(match.events||[]).filter(e=>e.type==='goal'&&e.team==='thuis'&&e.assist===p.naam).length;
       return[p.naam,p.pos,mins,goals,assists];
@@ -2154,7 +2462,7 @@ function exportExcel(){
       Object.entries(m.playtime||{}).forEach(([id,secs])=>{
         const pid=+id;
         if(stats[pid]){
-          stats[pid].minuten+=Math.floor(secs/60);
+          stats[pid].minuten+=minutenUit(secs);
           if(!seenPlayers.has(pid)&&secs>0){stats[pid].wedstrijden++;seenPlayers.add(pid);}
         }
       });
@@ -2219,6 +2527,22 @@ function appendTrainingSheets(wb){
   ]);
   wsP['!cols']=[{wch:12},{wch:8},{wch:11},{wch:26},{wch:6},{wch:6},{wch:11}];
   XLSX.utils.book_append_sheet(wb,wsP,'Programma');
+
+  // Was- en rijschema zoals het in de app staat
+  vulSchemaAan();
+  const naamVan=id=>{const p=players.find(x=>x.id===id);return p?p.naam:'';};
+  const wsR=XLSX.utils.aoa_to_sheet([
+    ['Datum','Thuis/Uit','Tegenstander','Wast de shirts',
+     'Auto 1','Auto 2','Auto 3','Auto 4','Auto 5'],
+    ...chronologisch().map(w=>{
+      const t=taken[w.id]||{};
+      const r=t.rijders||[];
+      return [w.date,w.homeAway,w.opponent,naamVan(t.wasser),
+              ...Array.from({length:5},(_,i)=>naamVan(r[i]))];
+    }),
+  ]);
+  wsR['!cols']=[{wch:12},{wch:11},{wch:26},{wch:26},...Array(5).fill({wch:26})];
+  XLSX.utils.book_append_sheet(wb,wsR,'Was- en rijschema');
 }
 
 // Volledig seizoensrapport (los van een wedstrijd)
@@ -2241,7 +2565,7 @@ function exportSeizoensrapport(){
   history.forEach(m=>{
     Object.entries(m.playtime||{}).forEach(([id,secs])=>{
       const pl=players.find(p=>p.id===+id);
-      if(pl&&stats[pl.naam]&&secs>0){ stats[pl.naam].min+=Math.floor(secs/60); stats[pl.naam].wed++; }
+      if(pl&&stats[pl.naam]&&secs>0){ stats[pl.naam].min+=minutenUit(secs); stats[pl.naam].wed++; }
     });
     (m.events||[]).forEach(ev=>{
       if(ev.type==='goal'&&ev.team==='thuis'){
@@ -2290,14 +2614,57 @@ function renderPlayerList(){
         <div class="pc-name">${p.naam}</div>
         <div class="pc-pos">${p.pos}${p.dob?' · '+formatDob(p.dob):''}</div>
         ${p.p1t?`<div style="font-size:.72rem;color:var(--muted);margin-top:2px">📞 ${p.p1} ${p.p1t}</div>`:''}
+        ${p.notes?`<div class="pc-note">📝 ${p.notes}</div>`:''}
       </div>
-      <button class="pc-edit" onclick="openEditPlayer(${p.id})">✏ Edit</button>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <button class="pc-edit" onclick="openNotitie(${p.id})"
+          style="${p.notes?'border-color:var(--accent);color:var(--accent)':''}">
+          ${p.notes?'📝 Notitie':'📝 +'}</button>
+        <button class="pc-edit" onclick="openEditPlayer(${p.id})">✏ Edit</button>
+      </div>
     </div>`).join('');
 }
 
 function formatDob(dob){
   if(!dob) return '';
   return new Date(dob).toLocaleDateString('nl-NL',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+// ── Notities ──
+const SNELLE_NOTITIES=['Blessure','Afwezig langere tijd','Nieuw in het team',
+  'Wil graag keepen','Sterke linkerbeen','Aandacht voor concentratie'];
+
+function openNotitie(id){
+  const p=players.find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('notitieTitel').textContent='📝 '+p.naam;
+  document.getElementById('notitieSpelerId').value=id;
+  document.getElementById('notitieTekst').value=p.notes||'';
+  document.getElementById('notitieSnel').innerHTML=SNELLE_NOTITIES.map(t=>
+    `<button class="pc-edit" style="font-size:.72rem" onclick="voegSnelToe('${t}')">+ ${t}</button>`).join('');
+  openModal('notitieModal');
+}
+
+function voegSnelToe(tekst){
+  const el=document.getElementById('notitieTekst');
+  el.value=el.value.trim()?el.value.trim()+'\n'+tekst:tekst;
+}
+
+function bewaarNotitie(){
+  const id=+document.getElementById('notitieSpelerId').value;
+  const p=players.find(x=>x.id===id);
+  if(p){ p.notes=document.getElementById('notitieTekst').value.trim(); persist(); }
+  closeModal('notitieModal');
+  renderPlayerList();
+}
+
+function wisNotitie(){
+  const id=+document.getElementById('notitieSpelerId').value;
+  const p=players.find(x=>x.id===id);
+  if(p&&p.notes&&!confirm('Notitie van '+p.naam+' wissen?')) return;
+  if(p){ p.notes=''; persist(); }
+  closeModal('notitieModal');
+  renderPlayerList();
 }
 
 function openEditPlayer(id){
@@ -2364,7 +2731,7 @@ function getSeizoenStats(){
       else st[p.id].aanwezig++;
     });
     Object.entries(m.playtime||{}).forEach(([id,secs])=>{
-      if(st[+id]) st[+id].minuten+=Math.floor(secs/60);
+      if(st[+id]) st[+id].minuten+=minutenUit(secs);
     });
     (m.events||[]).forEach(ev=>{
       if(ev.type!=='goal'||ev.team!=='thuis') return;
@@ -2414,7 +2781,7 @@ function renderSpeeltijd(){
   const sorted=[...players].sort((a,b)=>(playtime[b.id]||0)-(playtime[a.id]||0));
   el.innerHTML=sorted.map(p=>{
     const secs=playtime[p.id]||0;
-    const mins=Math.floor(secs/60);
+    const mins=minutenUit(secs);
     const pct=Math.round(secs/maxMin*100);
     return`<div class="minutes-bar-wrap">
       <div class="minutes-bar-label"><span>${p.nr}. ${p.naam}</span><span>${mins}'</span></div>
@@ -2428,7 +2795,7 @@ function renderSpeeltijd(){
   const seasonMins={};
   history.forEach(m=>{
     Object.entries(m.playtime||{}).forEach(([id,secs])=>{
-      seasonMins[+id]=(seasonMins[+id]||0)+Math.floor(secs/60);
+      seasonMins[+id]=(seasonMins[+id]||0)+minutenUit(secs);
     });
   });
   const maxSeason=Math.max(...players.map(p=>seasonMins[p.id]||0),1);
@@ -2470,13 +2837,14 @@ function renderSpeeltijd(){
 // ══════════════════════════════════════════════════════
 
 function showTab(name){
-  const TABS=['home','programma','wedstrijd','spelers','training','statistieken'];
+  const TABS=['home','programma','wedstrijd','spelers','training','statistieken','beheer'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',TABS[i]===name));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
   if(name==='home') renderHome();
   if(name==='spelers') renderPlayerList();
   if(name==='statistieken') renderSpeeltijd();
+  if(name==='beheer') renderBeheerTab();
   if(name==='training') renderTrainingList();
   if(name==='programma') renderProgramma();
   if(name==='wedstrijd'){
@@ -2652,6 +3020,34 @@ let attendance=ls('jo133_attendance',{}); // {'2026-09-07':{playerId:'aanwezig'|
 
 function persistAttendance(){ss('jo133_attendance',attendance);}
 
+// Afgelaste trainingen (sleutels), tellen niet mee voor de opkomst
+let vervallen=ls('jo133_vervallen',[]);
+function persistVervallen(){ss('jo133_vervallen',vervallen);}
+function isVervallen(key){ return vervallen.includes(key); }
+
+function zetVervallen(key,aan){
+  if(aan){
+    if(!vervallen.includes(key)) vervallen.push(key);
+    delete attendance[key];          // registratie vervalt mee
+    persistAttendance();
+  } else {
+    vervallen=vervallen.filter(k=>k!==key);
+  }
+  persistVervallen();
+  renderTrainingList();
+  renderSpeeltijd();
+  renderHome();
+}
+
+function vervalHuidigeTraining(){
+  if(!currentTrainingKey) return;
+  const t=TRAINING_DATES.find(t=>t.key===currentTrainingKey);
+  if(!confirm(`Training van ${t?formatTrainDate(t.date):currentTrainingKey} laten vervallen?\n\n`+
+     `De training telt dan niet mee voor de opkomstpercentages. Een al ingevulde registratie wordt gewist.`)) return;
+  zetVervallen(currentTrainingKey,true);
+  closeModal('trainingModal');
+}
+
 const DAG_NL=['zo','ma','di','wo','do','vr','za'];
 const MAAND_NL=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
 
@@ -2665,22 +3061,25 @@ function renderTrainingList(){
 
   const isDone=t=>!t.holiday&&attendance[t.key]&&Object.keys(attendance[t.key]).length>0;
 
-  const todo     = TRAINING_DATES.filter(t=>t.date<today&&!t.holiday&&!isDone(t)).reverse();
+  const todo     = TRAINING_DATES.filter(t=>t.date<today&&!t.holiday&&!isVervallen(t.key)&&!isDone(t)).reverse();
   const upcoming = TRAINING_DATES.filter(t=>t.date>=today);
-  const done     = TRAINING_DATES.filter(t=>t.date<today&&isDone(t)).reverse();
+  const done     = TRAINING_DATES.filter(t=>t.date<today&&(isDone(t)||isVervallen(t.key))).reverse();
 
   const card=t=>{
     let badge='',cls='';
     if(t.holiday){badge='<span class="td-badge holiday">Vakantie</span>';cls=' holiday';}
+    else if(isVervallen(t.key)){badge='<span class="td-badge vervallen">Vervallen</span>';cls=' vervallen';}
     else if(isDone(t)){badge='<span class="td-badge done">Ingevuld ✓</span>';cls=' done';}
     else if(t.date<today){badge='<span class="td-badge" style="background:var(--red);color:#fff">Invullen</span>';}
     else{badge='<span class="td-badge">Aankomend</span>';}
-    const onclick=t.holiday?'':`onclick="openTrainingModal('${t.key}')"`;
+    const onclick=t.holiday?''
+      :isVervallen(t.key)?`onclick="if(confirm('Deze training weer laten meetellen?')) zetVervallen('${t.key}',false)"`
+      :`onclick="openTrainingModal('${t.key}')"`;
     const dagen=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
     return`<div class="training-day${cls}" ${onclick}>
       <div>
         <div class="td-date">${formatTrainDate(t.date)}</div>
-        <div class="td-sub">${dagen[t.date.getDay()]}${t.extra?' • extra training':''}${t.holiday?' — Schoolvakantie regio Noord':''}</div>
+        <div class="td-sub">${dagen[t.date.getDay()]}${t.extra?' • extra training':''}${t.holiday?' — Schoolvakantie regio Noord':''}${isVervallen(t.key)?' — telt niet mee':''}</div>
       </div>
       ${badge}
     </div>`;
@@ -2771,11 +3170,16 @@ const POINTS={aanwezig:100,A:75,B:50,C:0};
 // Training scores per speler (voor speeltijd tab)
 // Elke geregistreerde training telt voor ALLE spelers mee; wie geen
 // afwijkende status heeft, geldt als aanwezig (100 punten).
+const OPKOMST_VENSTER=10;   // aantal recente trainingen dat meetelt
+
 function getTrainingScores(){
   const scores={};
   const counts={};
   players.forEach(p=>{scores[p.id]=0;counts[p.id]=0;});
-  TRAINING_DATES.filter(t=>!t.holiday&&attendance[t.key]).forEach(t=>{
+  const meetellend=TRAINING_DATES
+    .filter(t=>!t.holiday&&!isVervallen(t.key)&&attendance[t.key])
+    .slice(-OPKOMST_VENSTER);
+  meetellend.forEach(t=>{
     const sess=attendance[t.key];
     players.forEach(p=>{
       const state=sess[p.id]||'aanwezig';
@@ -2865,7 +3269,19 @@ function afwezigVanProgramma(id){
 function startFromSchedule(id){
   const w=schedule.find(x=>x.id===id);
   if(!w) return;
-  if(!confirm(`Wedstrijd voorbereiden tegen ${w.opponent}?\n\nDe huidige wedstrijddata wordt gewist.`)) return;
+  // Staat deze wedstrijd al klaar? Dan gewoon openen.
+  if(match.opponent===w.opponent&&match.date===w.date){
+    showTab('wedstrijd');
+    showMatchSub(match.currentHalf>0?'live':'voorbereiding');
+    return;
+  }
+  const bezig=match.opponent&&match.currentHalf>0&&match.currentHalf<4;
+  const waarschuwing=bezig
+    ? `Let op: de wedstrijd tegen ${match.opponent} is nog bezig.\n\nDie gegevens gaan verloren.`
+    : match.opponent
+      ? `De voorbereiding voor ${match.opponent} wordt vervangen.`
+      : '';
+  if(waarschuwing&&!confirm(`Wedstrijd voorbereiden tegen ${w.opponent}?\n\n${waarschuwing}`)) return;
   if(displayInterval){clearInterval(displayInterval);displayInterval=null;}
   playtime={};
   match=EMPTY_MATCH();
@@ -2974,6 +3390,7 @@ function saveWedstrijd(){
     schedule.push(data);
   }
   persistSchedule();
+  vulSchemaAan();
   closeModal('addWedstrijdModal');
   renderProgramma();
 }
@@ -3006,6 +3423,8 @@ async function exportAppWithPlayers(){
 }
 
 // ── Init ──
+const _fs=document.getElementById('formationSelect');
+if(_fs) _fs.value=huidigeFormatie;
 werkSyncIconBij();
 startAutoSync();
 renderPitch();
