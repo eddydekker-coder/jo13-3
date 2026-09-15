@@ -8,117 +8,121 @@
 <meta name="apple-mobile-web-app-title" content="JO13-3">
 <title>JO13-3 – FC Ommen</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --blue:#1F4E79; --light-blue:#2E75B6; --accent:#00A86B;
-    --red:#C00000; --yellow:#FFD700; --panel:#1a1a2e;
-    --card:#16213e; --text:#f0f0f0; --muted:#aaa; --border:#334;
+    --blue:#17372a; --light-blue:#1f7a4d; --accent:#1f7a4d;
+    --red:#c0392b; --yellow:#c47f00; --panel:#f6f7f4;
+    --card:#ffffff; --text:#17211c; --muted:#5f6e66; --border:#e6eae6;
+    --shadow:0 1px 3px rgba(23,33,28,.07);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:Arial,sans-serif;background:var(--panel);color:var(--text);min-height:100vh}
+  body{font-family:Outfit,system-ui,-apple-system,sans-serif;background:var(--panel);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
 
-  header{background:var(--blue);padding:12px 16px;display:flex;align-items:center;
-    justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.5)}
-  header h1{font-size:1.1rem;letter-spacing:.5px}
-  header span{font-size:.8rem;color:#cde}
+  header{background:var(--card);padding:14px 18px;display:flex;align-items:center;
+    justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+  header h1{font-size:1.15rem;font-weight:600;letter-spacing:-.02em;color:var(--text)}
+  header span{font-size:.8rem;font-weight:500;color:var(--muted)}
 
-  .tabs{display:flex;background:var(--card);border-bottom:2px solid var(--blue);overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch}
   .tabs::-webkit-scrollbar{display:none}
-  .tab{flex:none;min-width:72px;padding:12px 6px;text-align:center;font-size:.72rem;cursor:pointer;
+  .tab{flex:none;min-width:72px;padding:13px 8px;text-align:center;font-size:.74rem;font-weight:500;cursor:pointer;
     color:var(--muted);border:none;background:none;transition:all .2s;white-space:nowrap}
-  .tab.active{color:var(--text);border-bottom:3px solid var(--accent);font-weight:bold}
+  .tab.active{color:var(--accent);border-bottom:3px solid var(--accent);font-weight:600}
   /* Sub-tabs binnen Wedstrijd */
-  .subtabs{display:flex;gap:8px;margin-bottom:12px;background:rgba(0,0,0,.25);
-    border-radius:10px;padding:4px}
-  .subtab{flex:1;padding:9px 6px;border:none;border-radius:7px;background:none;
-    color:var(--muted);font-size:.8rem;font-weight:bold;cursor:pointer;transition:all .15s}
-  .subtab.active{background:var(--blue);color:#fff}
+  .subtabs{display:flex;gap:6px;margin-bottom:12px;background:#eef1ed;
+    border-radius:14px;padding:4px}
+  .subtab{flex:1;padding:9px 6px;border:none;border-radius:11px;background:none;
+    color:var(--muted);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s}
+  .subtab.active{background:var(--card);color:var(--text);box-shadow:var(--shadow)}
 
   /* Home dashboard */
-  .home-card{background:var(--card);border-radius:12px;padding:14px 16px;margin-bottom:10px;
-    border:1px solid var(--border)}
-  .hc-label{font-size:.68rem;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);
-    margin-bottom:6px}
-  .hc-main{font-size:1.15rem;font-weight:900;line-height:1.3}
-  .hc-sub{font-size:.78rem;color:var(--muted);margin-top:3px}
-  .hc-big{font-size:2rem;font-weight:900;letter-spacing:2px}
+  .home-card{background:var(--card);border-radius:18px;padding:16px 18px;margin-bottom:10px;
+    border:1px solid var(--border);box-shadow:var(--shadow)}
+  .hc-label{font-size:.68rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);
+    font-weight:600;margin-bottom:6px}
+  .hc-main{font-size:1.2rem;font-weight:600;letter-spacing:-.02em;line-height:1.3}
+  .hc-sub{font-size:.8rem;color:var(--muted);margin-top:3px}
+  .hc-big{font-size:2rem;font-weight:700;letter-spacing:-.01em}
   .hc-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
-  .hc-pill{font-size:.7rem;padding:3px 9px;border-radius:11px;background:var(--border);
+  .hc-pill{font-size:.72rem;font-weight:600;padding:4px 11px;border-radius:999px;background:#eef1ed;color:var(--muted);
     white-space:nowrap}
   .hc-pill.win{background:var(--accent);color:#fff}
   .hc-pill.loss{background:var(--red);color:#fff}
-  .hc-pill.draw{background:#666;color:#fff}
+  .hc-pill.draw{background:#8b978f;color:#fff}
   .hc-list{display:flex;flex-direction:column;gap:5px;margin-top:8px}
-  .hc-item{display:flex;align-items:center;gap:9px;font-size:.8rem}
-  .hc-rank{width:19px;height:19px;border-radius:50%;background:var(--blue);color:#fff;
-    font-size:.65rem;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .hc-rank.gold{background:#D4AF37;color:#111}
-  .hc-item .hc-val{margin-left:auto;font-weight:bold;color:var(--accent)}
+  .hc-item{display:flex;align-items:center;gap:9px;font-size:.82rem}
+  .hc-rank{width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;
+    font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .hc-rank.gold{background:#d4a017;color:#fff}
+  .hc-item .hc-val{margin-left:auto;font-weight:600;color:var(--accent)}
 
   /* Afwezig */
   .afw-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-  .afw-chip{display:flex;align-items:center;gap:5px;background:rgba(192,0,0,.18);
-    border:1px solid var(--red);border-radius:14px;padding:3px 9px;font-size:.74rem}
-  .afw-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+  .afw-chip{display:flex;align-items:center;gap:5px;background:#fbeceb;
+    border:1px solid #f0c9c5;color:var(--red);border-radius:999px;padding:4px 10px;font-size:.75rem;font-weight:500}
+  .afw-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
   .afw-row:last-child{border-bottom:none}
-  .afw-row .naam{flex:1;font-size:.85rem}
+  .afw-row .naam{flex:1;font-size:.88rem;font-weight:500}
   .afw-row.is-afwezig .naam{text-decoration:line-through;color:var(--muted)}
-  .afw-toggle{width:62px;padding:5px 0;border-radius:7px;border:1.5px solid var(--border);
-    background:var(--card);color:var(--muted);font-size:.72rem;font-weight:bold;cursor:pointer}
+  .afw-toggle{width:62px;padding:6px 0;border-radius:10px;border:1.5px solid var(--border);
+    background:var(--card);color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer}
   .afw-toggle.aan{background:var(--accent);border-color:var(--accent);color:#fff}
   .afw-toggle.uit{background:var(--red);border-color:var(--red);color:#fff}
 
   /* Statistiekentabel */
   .stat-head,.stat-row{display:grid;grid-template-columns:1.7fr 34px 34px 40px 30px 30px;
-    gap:4px;align-items:center;padding:7px 8px;font-size:.76rem}
-  .stat-head{background:var(--blue);color:#fff;font-weight:bold;border-radius:8px 8px 0 0;
+    gap:4px;align-items:center;padding:8px 10px;font-size:.78rem}
+  .stat-head{background:var(--blue);color:#fff;font-weight:600;border-radius:14px 14px 0 0;
     font-size:.66rem;text-transform:uppercase;letter-spacing:.4px}
   .stat-row{background:var(--card);border-bottom:1px solid var(--border)}
-  .stat-row:nth-child(even){background:rgba(255,255,255,.03)}
-  .stat-row:last-child{border-radius:0 0 8px 8px;border-bottom:none}
-  .stat-row .nm{font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .stat-row:nth-child(even){background:#fafbfa}
+  .stat-row:last-child{border-radius:0 0 14px 14px;border-bottom:none}
+  .stat-row .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .stat-num{text-align:center}
-  .stat-num.groen{color:var(--accent);font-weight:bold}
-  .stat-num.rood{color:#ff6b6b}
+  .stat-num.groen{color:var(--accent);font-weight:600}
+  .stat-num.rood{color:var(--red)}
 
   /* Training */
-  .training-day{background:var(--card);border-radius:10px;padding:12px 14px;margin-bottom:8px;
-    border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
-  .training-day.holiday{border-color:var(--yellow);opacity:.6;cursor:default}
-  .training-day.done{border-color:var(--accent)}
-  .td-date{font-weight:bold;font-size:.9rem}
-  .td-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
-  .td-badge{font-size:.72rem;padding:3px 8px;border-radius:10px;background:var(--border)}
+  .training-day{background:var(--card);border-radius:16px;padding:13px 15px;margin-bottom:8px;
+    border:1px solid var(--border);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+  .training-day.holiday{border-color:#e8d9a8;background:#fdfaf0;opacity:.85;cursor:default}
+  .training-day.done{border-color:#b9ddc8}
+  .td-date{font-weight:600;font-size:.92rem}
+  .td-sub{font-size:.74rem;color:var(--muted);margin-top:2px}
+  .td-badge{font-size:.72rem;font-weight:600;padding:4px 10px;border-radius:999px;background:#eef1ed;color:var(--muted)}
   .td-badge.done{background:var(--accent);color:#fff}
-  .td-badge.holiday{background:var(--yellow);color:#111}
-  .attend-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+  .td-badge.holiday{background:var(--yellow);color:#fff}
+  .attend-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)}
   .attend-row:last-child{border-bottom:none}
-  .attend-name{flex:1;font-size:.85rem}
-  .attend-btn{width:36px;height:36px;border-radius:8px;border:2px solid transparent;font-size:.78rem;
-    font-weight:bold;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center}
+  .attend-name{flex:1;font-size:.88rem;font-weight:500}
+  .attend-btn{width:38px;height:38px;border-radius:11px;border:2px solid transparent;font-size:.78rem;
+    font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center}
   .attend-btn.active-aanwezig{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .attend-btn.active-A{background:#FFC107;color:#111;border-color:#FFC107}
-  .attend-btn.active-B{background:#FF9800;color:#fff;border-color:#FF9800}
+  .attend-btn.active-A{background:#c47f00;color:#fff;border-color:#c47f00}
+  .attend-btn.active-B{background:#d9660a;color:#fff;border-color:#d9660a}
   .attend-btn.active-C{background:var(--red);color:#fff;border-color:var(--red)}
   .attend-btn:not([class*="active"]){background:var(--card);color:var(--muted);border-color:var(--border)}
   .legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
-  .legend-item{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.07);
-    border-radius:8px;padding:7px 8px}
-  .legend-key{width:24px;height:24px;border-radius:6px;font-weight:900;font-size:.8rem;
+  .legend-item{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:8px 9px}
+  .legend-key{width:24px;height:24px;border-radius:8px;font-weight:700;font-size:.8rem;
     display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .legend-item>span:last-child{display:flex;flex-direction:column;font-size:.72rem;
-    color:#fff;line-height:1.25}
-  .legend-item b{font-size:.68rem;color:var(--accent);font-weight:700}
+  .legend-item>span:last-child{display:flex;flex-direction:column;font-size:.73rem;
+    color:var(--text);line-height:1.25}
+  .legend-item b{font-size:.68rem;color:var(--accent);font-weight:600}
   /* Wedstrijden */
-  .wedstrijd-item{background:var(--card);border-radius:10px;padding:12px 14px;margin-bottom:8px;
-    border:1px solid var(--border)}
+  .wedstrijd-item{background:var(--card);border-radius:16px;padding:13px 15px;margin-bottom:8px;
+    border:1px solid var(--border);box-shadow:var(--shadow)}
   .wi-top{display:flex;justify-content:space-between;align-items:center}
-  .wi-opp{font-weight:bold;font-size:.9rem}
-  .wi-date{font-size:.75rem;color:var(--muted)}
-  .wi-score{font-size:1.1rem;font-weight:900;color:var(--accent)}
-  .wi-meta{font-size:.72rem;color:var(--muted);margin-top:4px}
+  .wi-opp{font-weight:600;font-size:.92rem}
+  .wi-date{font-size:.76rem;color:var(--muted)}
+  .wi-score{font-size:1.15rem;font-weight:700;color:var(--accent)}
+  .wi-meta{font-size:.74rem;color:var(--muted);margin-top:4px}
 
-  .view{display:none;padding:12px}
+  .view{display:none;padding:14px}
   .view.active{display:block}
 
   /* ── Pitch ── */
@@ -132,7 +136,7 @@
       #2d7a2d 61.5%,#2d7a2d 69.2%,#3a8f3a 69.2%,#3a8f3a 76.9%,
       #2d7a2d 76.9%,#2d7a2d 84.6%,#3a8f3a 84.6%,#3a8f3a 92.3%,
       #2d7a2d 92.3%,#2d7a2d 100%);
-    border-radius:4px;position:relative;border:2px solid #555;overflow:visible}
+    border-radius:16px;position:relative;border:1px solid var(--border);overflow:visible}
   .pitch::before{content:'';position:absolute;inset:0;
     background:linear-gradient(transparent 49.5%,rgba(255,255,255,.4) 49.5%,rgba(255,255,255,.4) 50.5%,transparent 50.5%);
     pointer-events:none}
@@ -148,105 +152,105 @@
   .player-token{position:absolute;width:56px;height:58px;transform:translate(-50%,-50%);
     cursor:pointer;z-index:10;-webkit-tap-highlight-color:transparent}
   .token-circle{width:44px;height:44px;border-radius:50%;background:var(--blue);border:2px solid #fff;
-    display:flex;align-items:center;justify-content:center;margin:4px auto 2px;font-weight:bold;
-    box-shadow:0 2px 6px rgba(0,0,0,.5);transition:transform .15s,background .15s}
-  .token-circle.keeper{background:#E65C00}
+    display:flex;align-items:center;justify-content:center;margin:4px auto 2px;font-weight:700;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .15s,background .15s}
+  .token-circle.keeper{background:#d9660a}
   .token-circle.selected{transform:scale(1.15);background:var(--accent)}
-  .token-nr{color:#fff;font-size:.85rem;font-weight:900}
-  .token-name{text-align:center;font-size:.58rem;color:#fff;background:rgba(0,0,0,.65);
-    border-radius:3px;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  .token-nr{color:#fff;font-size:.85rem;font-weight:700}
+  .token-name{text-align:center;font-size:.6rem;font-weight:500;color:#fff;background:rgba(0,0,0,.6);
+    border-radius:6px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     max-width:62px;margin:0 auto}
 
   /* ── Bench ── */
-  .bench-label{font-size:.75rem;color:var(--muted);margin:10px 0 6px;text-transform:uppercase;letter-spacing:1px}
-  .bench{display:flex;flex-wrap:wrap;gap:8px;background:rgba(0,0,0,.3);border-radius:8px;padding:10px;min-height:60px}
-  .bench-player{display:flex;align-items:center;gap:6px;background:var(--card);border-radius:20px;
-    padding:5px 10px 5px 5px;cursor:pointer;border:1.5px solid var(--border);transition:border-color .15s;
+  .bench-label{font-size:.72rem;font-weight:600;color:var(--muted);margin:12px 0 6px;text-transform:uppercase;letter-spacing:1px}
+  .bench{display:flex;flex-wrap:wrap;gap:8px;background:#eef1ed;border-radius:16px;padding:10px;min-height:60px}
+  .bench-player{display:flex;align-items:center;gap:6px;background:var(--card);border-radius:999px;
+    padding:5px 12px 5px 5px;cursor:pointer;border:1.5px solid var(--border);transition:border-color .15s;
     -webkit-tap-highlight-color:transparent}
   .bench-player.selected{border-color:var(--accent)}
   .bench-nr{width:26px;height:26px;border-radius:50%;background:var(--light-blue);color:#fff;
-    font-size:.75rem;font-weight:bold;display:flex;align-items:center;justify-content:center}
-  .bench-player span{font-size:.8rem}
+    font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+  .bench-player span{font-size:.82rem;font-weight:500}
 
   /* ── Match / Timer ── */
-  .scoreboard{background:var(--card);border-radius:10px;padding:14px 16px;text-align:center;
-    margin-bottom:10px;border:1px solid var(--border)}
-  .score-display{font-size:2.5rem;font-weight:900;letter-spacing:4px}
-  .score-teams{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-top:4px}
+  .scoreboard{background:var(--accent);color:#fff;border-radius:20px;padding:16px 18px;text-align:center;
+    margin-bottom:10px}
+  .score-display{font-size:2.5rem;font-weight:700;letter-spacing:2px}
+  .score-teams{display:flex;justify-content:space-between;font-size:.8rem;font-weight:500;color:#d8f2e4;margin-top:4px}
 
-  .timer-block{background:var(--card);border-radius:10px;padding:16px;text-align:center;
-    margin-bottom:10px;border:1px solid var(--border)}
-  .timer-half-label{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:4px}
-  .timer-display{font-size:3.2rem;font-weight:900;letter-spacing:2px;color:var(--accent);
+  .timer-block{background:var(--card);border-radius:20px;padding:18px;text-align:center;
+    margin-bottom:10px;border:1px solid var(--border);box-shadow:var(--shadow)}
+  .timer-half-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1.6px;font-weight:600;color:var(--muted);margin-bottom:4px}
+  .timer-display{font-size:3.2rem;font-weight:700;letter-spacing:-.01em;color:var(--accent);
     font-variant-numeric:tabular-nums}
-  .timer-display.paused{color:#888}
-  .timer-sub{font-size:.75rem;color:var(--muted);margin-top:4px}
+  .timer-display.paused{color:#93a09a}
+  .timer-sub{font-size:.76rem;color:var(--muted);margin-top:4px}
 
   .match-controls{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-  .btn{flex:1;min-width:80px;padding:10px 8px;border-radius:8px;border:none;font-size:.82rem;
-    font-weight:bold;cursor:pointer;transition:opacity .15s}
+  .btn{flex:1;min-width:80px;padding:12px 10px;border-radius:12px;border:none;font-family:inherit;font-size:.84rem;
+    font-weight:600;cursor:pointer;transition:opacity .15s}
   .btn:active{opacity:.75}
   .btn-green{background:var(--accent);color:#fff}
   .btn-red{background:var(--red);color:#fff}
-  .btn-blue{background:var(--light-blue);color:#fff}
-  .btn-gray{background:#444;color:#fff}
-  .btn-yellow{background:var(--yellow);color:#111}
-  .btn-orange{background:#E65C00;color:#fff}
+  .btn-blue{background:var(--blue);color:#fff}
+  .btn-gray{background:#eef1ed;color:var(--text)}
+  .btn-yellow{background:var(--yellow);color:#fff}
+  .btn-orange{background:#d9660a;color:#fff}
 
   .events-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
-  .event-item{background:var(--card);border-radius:8px;padding:10px 12px;display:flex;
-    align-items:center;gap:10px;border-left:3px solid var(--border);font-size:.82rem}
-  .event-item.goal{border-color:var(--accent)}
-  .event-item.sub{border-color:var(--yellow)}
-  .event-item .ev-min{font-weight:900;color:var(--accent);min-width:40px}
+  .event-item{background:var(--card);border-radius:14px;padding:11px 13px;display:flex;
+    align-items:center;gap:10px;border:1px solid var(--border);border-left:3px solid var(--border);font-size:.84rem;box-shadow:var(--shadow)}
+  .event-item.goal{border-left-color:var(--accent)}
+  .event-item.sub{border-left-color:var(--yellow)}
+  .event-item .ev-min{font-weight:700;color:var(--accent);min-width:40px}
   .event-item .ev-del{margin-left:auto;cursor:pointer;color:var(--muted);font-size:1rem}
 
   /* ── Players ── */
-  .player-card{background:var(--card);border-radius:10px;padding:12px 14px;margin-bottom:8px;
-    border:1px solid var(--border);display:flex;align-items:center;gap:12px}
-  .pc-nr{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;font-weight:900;
+  .player-card{background:var(--card);border-radius:16px;padding:13px 15px;margin-bottom:8px;
+    border:1px solid var(--border);box-shadow:var(--shadow);display:flex;align-items:center;gap:12px}
+  .pc-nr{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;
     font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .pc-nr.keeper{background:#E65C00}
+  .pc-nr.keeper{background:#d9660a}
   .pc-info{flex:1}
-  .pc-name{font-weight:bold;font-size:.9rem}
-  .pc-pos{font-size:.75rem;color:var(--muted)}
-  .pc-edit{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;
-    color:var(--text);font-size:.75rem;cursor:pointer}
+  .pc-name{font-weight:600;font-size:.92rem}
+  .pc-pos{font-size:.76rem;color:var(--muted)}
+  .pc-edit{background:none;border:1px solid var(--border);border-radius:10px;padding:5px 12px;
+    color:var(--muted);font-family:inherit;font-size:.76rem;font-weight:500;cursor:pointer}
 
   /* ── Modal ── */
-  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(23,33,28,.45);z-index:200;
     align-items:flex-end;justify-content:center}
   .modal-bg.open{display:flex}
-  .modal{background:var(--card);border-radius:16px 16px 0 0;padding:20px 16px 30px;
+  .modal{background:var(--card);border-radius:24px 24px 0 0;padding:22px 18px 30px;
     width:100%;max-width:500px;max-height:85vh;overflow-y:auto;position:relative}
-  .modal h3{margin-bottom:14px;font-size:1rem}
-  .modal label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:4px;margin-top:10px}
-  .modal input,.modal select{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);
-    background:#222;color:var(--text);font-size:.9rem}
+  .modal h3{margin-bottom:14px;font-size:1.05rem;font-weight:600;letter-spacing:-.01em}
+  .modal label{display:block;font-size:.8rem;font-weight:500;color:var(--muted);margin-bottom:4px;margin-top:10px}
+  .modal input,.modal select{width:100%;padding:11px;border-radius:12px;border:1px solid var(--border);
+    background:var(--card);color:var(--text);font-family:inherit;font-size:.9rem}
   .modal-actions{display:flex;gap:10px;margin-top:16px}
   .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;
     color:var(--muted);font-size:1.4rem;cursor:pointer}
   .modal-checkbox{display:flex;align-items:center;gap:10px;margin-top:12px;
-    background:rgba(255,255,255,.05);border-radius:8px;padding:10px}
+    background:#f3f5f2;border-radius:12px;padding:11px}
   .modal-checkbox input[type=checkbox]{width:20px;height:20px;flex-shrink:0;cursor:pointer}
   .modal-checkbox label{font-size:.85rem;color:var(--text);margin:0}
 
-  .section-title{font-size:.8rem;color:var(--muted);text-transform:uppercase;
+  .section-title{font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;
     letter-spacing:1px;margin-bottom:8px;margin-top:16px}
 
   /* ── Speeltijd ── */
   .minutes-bar-wrap{margin-bottom:8px}
-  .minutes-bar-label{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px}
-  .minutes-bar{height:8px;background:#333;border-radius:4px;overflow:hidden}
-  .minutes-bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .3s}
-  .minutes-bar-fill.season{background:var(--light-blue)}
+  .minutes-bar-label{display:flex;justify-content:space-between;font-size:.8rem;font-weight:500;margin-bottom:3px}
+  .minutes-bar{height:8px;background:#e6eae6;border-radius:999px;overflow:hidden}
+  .minutes-bar-fill{height:100%;background:var(--accent);border-radius:999px;transition:width .3s}
+  .minutes-bar-fill.season{background:#7bbf9a}
 
-  .fab{position:fixed;bottom:24px;right:20px;width:52px;height:52px;border-radius:50%;
+  .fab{position:fixed;bottom:24px;right:20px;width:54px;height:54px;border-radius:18px;
     background:var(--accent);color:#fff;font-size:1.6rem;border:none;cursor:pointer;
-    box-shadow:0 4px 12px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:50}
+    box-shadow:0 6px 16px rgba(31,122,77,.35);display:flex;align-items:center;justify-content:center;z-index:50}
 
-  select option{background:#1a1a2e}
-  .hint{font-size:.72rem;color:var(--muted);margin-top:6px;text-align:center}
+  select option{background:#fff}
+  .hint{font-size:.74rem;color:var(--muted);margin-top:6px;text-align:center}
 </style>
 </head>
 <body>
@@ -280,7 +284,7 @@
   <div style="display:flex;gap:8px;margin-bottom:12px">
     <button class="btn btn-blue" style="flex:none;padding:8px 12px;font-size:.78rem" onclick="openAddWedstrijd()">+ Wedstrijd</button>
     <a href="https://www.voetbal.nl/profiel/programma" target="_blank" rel="noopener"
-      style="flex:1;display:flex;align-items:center;justify-content:center;background:#444;border-radius:8px;color:var(--text);text-decoration:none;font-size:.78rem;font-weight:bold;padding:8px">
+      style="flex:1;display:flex;align-items:center;justify-content:center;background:#eef1ed;border-radius:12px;color:var(--text);text-decoration:none;font-size:.78rem;font-weight:bold;padding:8px">
       🌐 Voetbal.nl programma
     </a>
   </div>
@@ -299,11 +303,11 @@
     <div id="prepMatchHeader"></div>
 
     <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <button class="btn btn-yellow" style="flex:none;padding:8px 12px;color:#111" onclick="openCaptainModal()">🅒 Aanvoerder</button>
+      <button class="btn btn-yellow" style="flex:none;padding:8px 12px;color:#fff" onclick="openCaptainModal()">🅒 Aanvoerder</button>
       <button class="btn btn-gray" style="flex:none;padding:8px 12px" onclick="openAfwezigModal()">🚫 Afwezig</button>
       <button class="btn btn-gray" style="flex:none;padding:8px 12px" onclick="resetLineup()">↺ Reset</button>
       <select id="formationSelect" onchange="applyFormation(false)"
-        style="flex:1;min-width:150px;padding:8px;border-radius:8px;border:1px solid var(--border);background:#222;color:var(--text);font-size:.85rem">
+        style="flex:1;min-width:150px;padding:8px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:.85rem">
         <option value="ommen">1-4-3-3 · Ommen standaard</option>
         <option value="433">4-3-3</option>
         <option value="442">4-4-2</option>
@@ -369,7 +373,7 @@
 <div class="view" id="view-spelers">
   <div style="display:flex;gap:8px;margin-bottom:10px">
     <input id="searchInput" placeholder="🔍 Zoek speler…" oninput="renderPlayerList()"
-      style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:#222;color:var(--text);font-size:.9rem">
+      style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:.9rem">
     <button class="btn btn-blue" style="flex:none;padding:8px 12px;font-size:.8rem" onclick="document.getElementById('excelImport').click()">📥 Excel</button>
     <input type="file" id="excelImport" accept=".xlsx" style="display:none" onchange="importFromExcel(event)">
     <button class="btn btn-green" style="flex:none;padding:8px 12px;font-size:.8rem" onclick="exportAppWithPlayers()">📤 App</button>
@@ -528,7 +532,7 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal('syncModal')">✕</button>
     <h3>☁️ Synchronisatie</h3>
-    <div id="syncStatusBox" style="background:rgba(255,255,255,.06);border-radius:8px;
+    <div id="syncStatusBox" style="background:#f3f5f2;border:1px solid var(--border);border-radius:12px;
       padding:11px;font-size:.8rem;line-height:1.6;margin-bottom:12px"></div>
 
     <label>Worker-adres</label>
@@ -607,7 +611,7 @@
     <label>Kies aanvoerder voor deze wedstrijd</label>
     <select id="captainSelect"></select>
     <div class="modal-actions">
-      <button class="btn btn-yellow" style="flex:1;color:#111" onclick="confirmCaptain()">Opslaan</button>
+      <button class="btn btn-yellow" style="flex:1;color:#fff" onclick="confirmCaptain()">Opslaan</button>
       <button class="btn btn-gray" style="flex:1" onclick="closeModal('captainModal')">Annuleer</button>
     </div>
   </div>
@@ -635,10 +639,10 @@
     <button class="modal-close" onclick="closeModal('trainingModal')">✕</button>
     <h3 id="trainingModalTitle">📅 Training</h3>
     <div class="legend-grid">
-      <div class="legend-item"><span class="legend-key" style="background:#00A86B;color:#fff">✓</span><span>Aanwezig<b>100 pt</b></span></div>
-      <div class="legend-item"><span class="legend-key" style="background:#FFC107;color:#000">A</span><span>Afgemeld / geblesseerd<b>75 pt</b></span></div>
-      <div class="legend-item"><span class="legend-key" style="background:#FF9800;color:#000">B</span><span>Te laat<b>50 pt</b></span></div>
-      <div class="legend-item"><span class="legend-key" style="background:#C00000;color:#fff">C</span><span>Absent, niet afgemeld<b>0 pt</b></span></div>
+      <div class="legend-item"><span class="legend-key" style="background:#1f7a4d;color:#fff">✓</span><span>Aanwezig<b>100 pt</b></span></div>
+      <div class="legend-item"><span class="legend-key" style="background:#c47f00;color:#fff">A</span><span>Afgemeld / geblesseerd<b>75 pt</b></span></div>
+      <div class="legend-item"><span class="legend-key" style="background:#d9660a;color:#fff">B</span><span>Te laat<b>50 pt</b></span></div>
+      <div class="legend-item"><span class="legend-key" style="background:#c0392b;color:#fff">C</span><span>Absent, niet afgemeld<b>0 pt</b></span></div>
     </div>
     <div id="trainingAttendRows"></div>
     <div class="modal-actions" style="margin-top:12px">
@@ -1135,8 +1139,22 @@ const SYNC_KEYS=['jo133_players','jo133_lineup','jo133_bench','jo133_match',
 const CONTACT_VELDEN=['p1','p1t','p2','p2t','email','notes','dob'];
 
 let syncCfg=ls('jo133_synccfg',{url:'',token:'',device:'',auto:true,contact:false});
-let syncState=ls('jo133_syncstate',{version:0,lastPush:null,lastPull:null});
-let syncTimer=null, syncBezig=false, conflictInfo=null;
+let syncState=ls('jo133_syncstate',{version:0,lastPush:null,lastPull:null,schoon:null});
+let syncTimer=null, syncLopend=null, autoLopend=null, conflictInfo=null, conflictUitgesteldTot=0;
+
+// Korte vingerafdruk van de data, om te zien of er lokaal iets is gewijzigd.
+function vingerafdruk(obj){
+  const t=JSON.stringify(obj);
+  let h=5381;
+  for(let i=0;i<t.length;i++) h=((h*33)^t.charCodeAt(i))>>>0;
+  return h.toString(36)+'-'+t.length;
+}
+
+// Zijn er lokale wijzigingen die nog niet verstuurd zijn?
+function heeftLokaleWijzigingen(){
+  if(syncState.schoon===null||syncState.schoon===undefined) return true;
+  return vingerafdruk(bouwPayload())!==syncState.schoon;
+}
 
 function saveSyncCfg(){ss('jo133_synccfg',syncCfg);}
 function saveSyncState(){ss('jo133_syncstate',syncState);}
@@ -1215,13 +1233,19 @@ function herlaadUitOpslag(){
 // ── Versturen ──
 async function syncNu(handmatig){
   if(!syncIngesteld()){ if(handmatig) alert('Stel eerst het Worker-adres en token in.'); return; }
-  if(syncBezig) return;
-  syncBezig=true;
+  // Handmatige acties wachten netjes op een lopende achtergrondsync
+  if(syncLopend||autoLopend){
+    if(!handmatig) return;
+    try{ await (syncLopend||autoLopend); }catch{}
+  }
+  const taak=(async()=>{
   try{
+    const payload=bouwPayload();
+    const afdruk=vingerafdruk(payload);
     const r=await syncFetch('/data',{method:'PUT',body:JSON.stringify({
       baseVersion:syncState.version,
       device:syncCfg.device||'onbekend',
-      payload:bouwPayload(),
+      payload,
     })});
     if(r.status===409){
       conflictInfo=r.data;
@@ -1231,6 +1255,7 @@ async function syncNu(handmatig){
     if(!r.ok){ if(handmatig) alert('Versturen mislukt: '+(r.data?.error||r.status)); return false; }
     syncState.version=r.data.version;
     syncState.lastPush=r.data.updated;
+    syncState.schoon=afdruk;
     saveSyncState();
     toonSyncStatus();
     if(handmatig) alert('Gegevens verstuurd (versie '+r.data.version+').');
@@ -1238,14 +1263,20 @@ async function syncNu(handmatig){
   }catch(e){
     if(handmatig) alert('Geen verbinding met de server.\n\n'+e.message);
     return false;
-  }finally{ syncBezig=false; }
+  }
+  })();
+  syncLopend=taak;
+  try{ return await taak; } finally{ syncLopend=null; }
 }
 
 // ── Ophalen ──
 async function haalSyncOp(handmatig){
   if(!syncIngesteld()){ if(handmatig) alert('Stel eerst het Worker-adres en token in.'); return; }
-  if(syncBezig) return;
-  syncBezig=true;
+  if(syncLopend||autoLopend){
+    if(!handmatig) return;
+    try{ await (syncLopend||autoLopend); }catch{}
+  }
+  const taak=(async()=>{
   try{
     const r=await syncFetch('/data');
     if(!r.ok){ if(handmatig) alert('Ophalen mislukt: '+(r.data?.error||r.status)); return false; }
@@ -1255,27 +1286,54 @@ async function haalSyncOp(handmatig){
     syncState.lastPull=r.data.updated||null;
     saveSyncState();
     herlaadUitOpslag();
+    syncState.schoon=vingerafdruk(bouwPayload());
+    saveSyncState();
     toonSyncStatus();
     if(handmatig) alert('Gegevens opgehaald (versie '+syncState.version+').');
     return true;
   }catch(e){
     if(handmatig) alert('Geen verbinding met de server.\n\n'+e.message);
     return false;
-  }finally{ syncBezig=false; }
+  }
+  })();
+  syncLopend=taak;
+  try{ return await taak; } finally{ syncLopend=null; }
 }
 
 // ── Automatische cyclus ──
 // Eerst kijken of de server nieuwer is; zo ja ophalen, anders versturen.
 async function autoSync(){
-  if(!syncIngesteld()||!syncCfg.auto||syncBezig) return;
+  if(!syncIngesteld()||!syncCfg.auto||syncLopend||autoLopend) return;
   if(document.querySelector('.modal-bg.open')) return; // niet tijdens invoer
+  autoLopend=(async()=>{
   try{
     const meta=await syncFetch('/meta');
     if(!meta.ok) return;
     const serverVersie=meta.data?.version||0;
-    if(serverVersie>syncState.version) await haalSyncOp(false);
-    else await syncNu(false);
+    const gewijzigd=heeftLokaleWijzigingen();
+
+    const nooitGesynct=!syncState.version&&syncState.schoon==null;
+
+    if(serverVersie>syncState.version){
+      if(gewijzigd){
+        // Beide kanten hebben iets. Bij een eerste koppeling laten we de
+        // gebruiker rustig kiezen; daarna niet vaker dan eens per 10 minuten.
+        if(Date.now()<conflictUitgesteldTot) return;
+        conflictInfo={serverVersion:serverVersie,
+          serverUpdated:meta.data?.updated||null,
+          serverDevice:meta.data?.device||null,
+          eersteKoppeling:nooitGesynct};
+        toonConflict(conflictInfo);
+      } else {
+        await haalSyncOp(false);   // veilig: lokaal niets te verliezen
+      }
+    } else if(gewijzigd){
+      await syncNu(false);         // alleen versturen als er echt iets is
+    }
+    // Niets gewijzigd en niets nieuwer: met rust laten.
   }catch{ /* stilhouden bij netwerkstoring */ }
+  })();
+  try{ await autoLopend; } finally{ autoLopend=null; }
 }
 
 function startAutoSync(){
@@ -1291,24 +1349,47 @@ function toonConflict(info){
   const wanneer=info.serverUpdated
     ? new Date(info.serverUpdated).toLocaleString('nl-NL',{dateStyle:'short',timeStyle:'short'})
     : 'onbekend';
+  if(info.eersteKoppeling){
+    document.getElementById('conflictTekst').innerHTML=
+      `Dit apparaat is nog niet eerder gekoppeld, en op de server staan al gegevens`+
+      (info.serverDevice?` vanaf <b>${info.serverDevice}</b>`:'')+`.<br><br>`+
+      `Staat je echte administratie op het <b>andere</b> apparaat? Kies dan `+
+      `<i>Serverversie overnemen</i>.<br><br>`+
+      `Staat die op <b>dit</b> apparaat? Kies <i>Mijn versie doorzetten</i>.`;
+    openModal('conflictModal');
+    return;
+  }
   document.getElementById('conflictTekst').innerHTML=
-    `Op de server staat een nieuwere versie dan die van dit apparaat.<br><br>`+
+    `Beide apparaten hebben wijzigingen die de ander niet heeft.<br><br>`+
     `<b>Server:</b> versie ${info.serverVersion}, opgeslagen ${wanneer}`+
     (info.serverDevice?` vanaf <b>${info.serverDevice}</b>`:'')+`<br>`+
-    `<b>Dit apparaat:</b> versie ${syncState.version}<br><br>`+
-    `Doorzetten overschrijft de wijzigingen van het andere apparaat.`;
+    `<b>Dit apparaat:</b> versie ${syncState.version}, met nog niet verstuurde wijzigingen<br><br>`+
+    `<span style="color:var(--yellow)">Wat je niet kiest, gaat verloren.</span> `+
+    `Twijfel je? Kies <i>Later beslissen</i> en maak eerst een back-up via Spelers → 💾.`;
   openModal('conflictModal');
 }
 
 async function losConflictOp(keuze){
   closeModal('conflictModal');
-  if(keuze==='ophalen'){ await haalSyncOp(true); }
-  else if(keuze==='versturen'){
-    syncState.version=conflictInfo?.serverVersion??syncState.version;
-    saveSyncState();
-    await syncNu(true);
-  }
+  const info=conflictInfo;
   conflictInfo=null;
+  if(keuze==='later'){
+    conflictUitgesteldTot=Date.now()+10*60*1000;
+    return;
+  }
+  conflictUitgesteldTot=0;
+
+  if(keuze==='ophalen'){
+    await haalSyncOp(true);
+  } else if(keuze==='versturen'){
+    // Doe alsof we de serverversie al hadden, zodat de server hem accepteert
+    syncState.version=info?.serverVersion??syncState.version;
+    saveSyncState();
+    const gelukt=await syncNu(true);
+    if(gelukt===false&&!document.getElementById('conflictModal').classList.contains('open'))
+      alert('Doorzetten is niet gelukt. Probeer het nog eens via ⬆ Nu versturen.');
+  }
+  toonSyncStatus();
 }
 
 // ── Instellingenscherm ──
@@ -1357,9 +1438,12 @@ function toonSyncStatus(){
     return;
   }
   const t=s=>s?new Date(s).toLocaleString('nl-NL',{dateStyle:'short',timeStyle:'short'}):'nog niet';
+  const wacht=heeftLokaleWijzigingen();
   el.innerHTML=`${syncCfg.auto?'🟢':'🟡'} <b>${syncCfg.auto?'Automatisch actief':'Alleen handmatig'}</b><br>`+
     `<span style="color:var(--muted)">Versie ${syncState.version} · `+
-    `verstuurd ${t(syncState.lastPush)} · opgehaald ${t(syncState.lastPull)}</span>`;
+    `verstuurd ${t(syncState.lastPush)} · opgehaald ${t(syncState.lastPull)}</span>`+
+    (wacht?`<br><span style="color:var(--yellow)">✎ Er staan wijzigingen klaar om te versturen</span>`
+          :`<br><span style="color:var(--accent)">✓ Gelijk aan de server</span>`);
 }
 
 function werkSyncIconBij(){
@@ -2404,7 +2488,11 @@ function showTab(name){
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.modal-bg').forEach(bg=>{
-  bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');});
+  bg.addEventListener('click',e=>{
+    if(e.target!==bg) return;
+    bg.classList.remove('open');
+    if(bg.id==='conflictModal'){ conflictInfo=null; conflictUitgesteldTot=Date.now()+10*60*1000; }
+  });
 });
 
 // ── Captain ──
